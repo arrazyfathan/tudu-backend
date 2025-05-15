@@ -1,13 +1,8 @@
 import express from "express";
-import {Request, Response} from "express";
+import {publicRouter} from "./routes/public.api";
+import {errorMiddleware} from "./middlewares/error.middleware";
 
-const app = express();
-const port = process.env.PORT;
-
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World!");
-});
-
-app.listen(port, () => {
-    console.log(`Server listening on port http://localhost:${port}`);
-});
+export const app = express();
+app.use(express.json());
+app.use(publicRouter);
+app.use(errorMiddleware);
