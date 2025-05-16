@@ -28,6 +28,10 @@ export type LoginResponse = {
     token: Token;
 }
 
+export type RefreshTokenRequest = {
+    refresh_token: string;
+}
+
 export function toRegisterResponse(user: User): RegisterResponse {
     return {
         id: user.id,

@@ -10,9 +10,10 @@ import {
     LoginUserRequest,
     RegisterResponse,
     toLoginResponse,
-    toRegisterResponse
+    toRegisterResponse, RefreshTokenRequest
 } from "../models/auth.model";
 import {generateTokens} from "../utils/jwt";
+import logger from "../utils/logger";
 
 export class AuthService {
 
@@ -70,6 +71,39 @@ export class AuthService {
         await AuthService.addRefreshTokenToWhitelist(refreshToken, user.id);
 
         return toLoginResponse(user, accessToken, refreshToken);
+    }
+
+    static async refreshToken(request: RefreshTokenRequest): Promise<LoginResponse> {
+        if (!request) {
+            throw new ResponseError(400, "Refresh token is required!");
+        }
+
+        logger.info("Refreshing token...", request);
+        const savedRefreshToken = await AuthService.findRefreshToken(request.refresh_token);
+
+        if (
+            !savedRefreshToken
+            || savedRefreshToken.revoked === true
+            || Date.now() >= savedRefreshToken.expiredAt.getTime()
+        ) {
+            throw new ResponseError(401, "Unauthorized");
+        }
+
+        const user = await prismaClient.user.findUnique({
+            where: {
+                id: savedRefreshToken.userId
+            }
+        });
+
+        if (!user) {
+            throw new ResponseError(401, "Unauthorized");
+        }
+
+        await AuthService.deleteRefreshTokenById(savedRefreshToken.id);
+        const {access_token: accessToken, refresh_token: newRefreshToken} = generateTokens(user);
+        await AuthService.addRefreshTokenToWhitelist(newRefreshToken, user.id)
+
+        return toLoginResponse(user, accessToken, newRefreshToken);
     }
 
 
