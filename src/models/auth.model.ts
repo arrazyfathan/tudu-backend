@@ -1,6 +1,12 @@
 import {User} from "../../generated/prisma/client";
-import {UserResponse} from "./user.model";
 import {Token} from "./token.model";
+
+export type RegisterRequest = {
+    email: string;
+    username: string;
+    name: string;
+    password: string;
+}
 
 export type RegisterResponse = {
     id: string;
@@ -38,8 +44,8 @@ export function toLoginResponse(user: User, accessToken: string, refreshToken: s
         username: user.username,
         email: user.email,
         token: {
-            accessToken: accessToken,
-            refreshToken: refreshToken,
+            access_token: accessToken,
+            refresh_token: refreshToken,
         }
     }
 }

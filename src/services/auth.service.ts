@@ -1,4 +1,3 @@
-import {CreateUserRequest, UserResponse} from "../models/user.model";
 import {Validation} from "../utils/validation";
 import {UserValidation} from "../validations/user.validation";
 import {prismaClient} from "../config/database";
@@ -6,6 +5,7 @@ import {ResponseError} from "../errors/response.error";
 import bcrypt from "bcrypt";
 import {hash} from "../utils/hash";
 import {
+    RegisterRequest,
     LoginResponse,
     LoginUserRequest,
     RegisterResponse,
@@ -14,9 +14,9 @@ import {
 } from "../models/auth.model";
 import {generateTokens} from "../utils/jwt";
 
-export class UserService {
+export class AuthService {
 
-    static async register(request: CreateUserRequest): Promise<RegisterResponse> {
+    static async register(request: RegisterRequest): Promise<RegisterResponse> {
         const registerRequest = Validation.validate(UserValidation.REGISTER, request);
         const totalUserWithSameUsername = await prismaClient.user.count({
             where: {
@@ -66,8 +66,8 @@ export class UserService {
             throw new ResponseError(401, "Username or password is wrong!");
         }
 
-        const {accessToken, refreshToken} = generateTokens(user);
-        await UserService.addRefreshTokenToWhitelist(refreshToken, user.id);
+        const {access_token: accessToken, refresh_token: refreshToken} = generateTokens(user);
+        await AuthService.addRefreshTokenToWhitelist(refreshToken, user.id);
 
         return toLoginResponse(user, accessToken, refreshToken);
     }
