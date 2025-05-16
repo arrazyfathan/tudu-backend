@@ -2,7 +2,7 @@ import {prismaClient} from "../src/config/database";
 import bcrypt from "bcrypt";
 import {User} from "../generated/prisma/client";
 
-export class UserTest {
+export class AuthTest {
 
     static async delete() {
         await prismaClient.user.deleteMany({

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import {User} from '../../generated/prisma/client';
-import {Token} from "../models/user.model";
+import {Token} from "../models/token.model";
 
 export function generateAccessToken(user: User): string {
     const secret = process.env.JWT_ACCESS_SECRET;
@@ -11,13 +11,13 @@ export function generateAccessToken(user: User): string {
     return jwt.sign({id: user.id}, secret, {expiresIn: '1h'});
 }
 
-export function generateRefreshToken(user: User): string {
+export function generateRefreshToken(): string {
     return crypto.randomBytes(16).toString('base64url');
 }
 
 export function generateTokens(user: User): Token {
     const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    return {accessToken, refreshToken};
+    const refreshToken = generateRefreshToken();
+    return {access_token: accessToken, refresh_token: refreshToken};
 }
 
