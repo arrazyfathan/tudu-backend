@@ -1,4 +1,4 @@
-import {UserTest} from "./test.util";
+import {AuthTest} from "./test.util";
 import {app} from "../src/app";
 import supertest from "supertest";
 import logger from "../src/utils/logger";
@@ -6,7 +6,7 @@ import logger from "../src/utils/logger";
 describe("POST /api/auth/register", () => {
 
     afterEach(async () => {
-        await UserTest.delete();
+        await AuthTest.delete();
     })
 
     it("should reject register when user already registered", async () => {
@@ -86,5 +86,52 @@ describe("POST /api/auth/login", () => {
             })
 
         logger.info(response.body);
+    })
+})
+
+describe("POST /api/auth/refresh_token", () => {
+
+    it("should reject generate refresh token if refresh token blank", async () => {
+        const response = await supertest(app)
+            .post("/api/auth/refresh_token")
+            .send({
+                refresh_token: null,
+            });
+
+        logger.info(response.body);
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("Refresh token is required!");
+    })
+
+    it("should reject generate refresh token if refresh token invalid", async () => {
+        const response = await supertest(app)
+            .post("/api/auth/refresh_token")
+            .send({
+                refresh_token: "invalid",
+            });
+
+        logger.info(response.body);
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toBe("Unauthorized");
+    });
+
+    it("should success refresh token", async () => {
+        const responseLogin = await supertest(app)
+            .post("/api/auth/login")
+            .send({
+                username: "razy",
+                password: "secret",
+            });
+
+        const response = await supertest(app)
+            .post("/api/auth/refresh_token")
+            .send({
+                refresh_token: responseLogin.body.data.token.refresh_token,
+            });
+
+
+        logger.info(response.body);
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("Refresh token successfully");
     })
 })

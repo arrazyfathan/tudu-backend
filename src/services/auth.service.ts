@@ -74,11 +74,10 @@ export class AuthService {
     }
 
     static async refreshToken(request: RefreshTokenRequest): Promise<LoginResponse> {
-        if (!request) {
+        if (!request.refresh_token) {
             throw new ResponseError(400, "Refresh token is required!");
         }
 
-        logger.info("Refreshing token...", request);
         const savedRefreshToken = await AuthService.findRefreshToken(request.refresh_token);
 
         if (
