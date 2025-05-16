@@ -1,16 +1,15 @@
-import {CreateUserRequest, toUserResponse, UserResponse} from "../models/user.model";
+import {CreateUserRequest} from "../models/user.model";
 import {Validation} from "../utils/validation";
 import {UserValidation} from "../validations/user.validation";
 import {prismaClient} from "../config/database";
 import {ResponseError} from "../errors/response.error";
 import bcrypt from "bcrypt";
-import {generateTokens} from "../utils/jwt";
 import {hash} from "../utils/hash";
-import {User} from "../../generated/prisma/client";
+import {RegisterResponse, toRegisterResponse} from "../models/auth.model";
 
 export class UserService {
 
-    static async register(request: CreateUserRequest): Promise<UserResponse> {
+    static async register(request: CreateUserRequest): Promise<RegisterResponse> {
         const registerRequest = Validation.validate(UserValidation.REGISTER, request);
         const totalUserWithSameUsername = await prismaClient.user.count({
             where: {
@@ -19,7 +18,17 @@ export class UserService {
         });
 
         if (totalUserWithSameUsername != 0) {
-            throw new ResponseError(400, "User already exists");
+            throw new ResponseError(409, "User already exists");
+        }
+
+        const totalUserWithSameEmail = await prismaClient.user.count({
+            where: {
+                email: registerRequest.email
+            }
+        });
+
+        if (totalUserWithSameEmail != 0) {
+            throw new ResponseError(409, "Email is already taken");
         }
 
         registerRequest.password = await bcrypt.hash(registerRequest.password, 10);
@@ -28,10 +37,7 @@ export class UserService {
             data: registerRequest
         });
 
-        const {accessToken, refreshToken} = generateTokens(user);
-        await UserService.addRefreshTokenToWhitelist(refreshToken, user.id);
-
-        return toUserResponse(user, accessToken, refreshToken);
+        return toRegisterResponse(user);
     }
 
 
