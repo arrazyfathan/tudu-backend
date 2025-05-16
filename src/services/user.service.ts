@@ -1,11 +1,18 @@
-import {CreateUserRequest} from "../models/user.model";
+import {CreateUserRequest, UserResponse} from "../models/user.model";
 import {Validation} from "../utils/validation";
 import {UserValidation} from "../validations/user.validation";
 import {prismaClient} from "../config/database";
 import {ResponseError} from "../errors/response.error";
 import bcrypt from "bcrypt";
 import {hash} from "../utils/hash";
-import {RegisterResponse, toRegisterResponse} from "../models/auth.model";
+import {
+    LoginResponse,
+    LoginUserRequest,
+    RegisterResponse,
+    toLoginResponse,
+    toRegisterResponse
+} from "../models/auth.model";
+import {generateTokens} from "../utils/jwt";
 
 export class UserService {
 
@@ -38,6 +45,31 @@ export class UserService {
         });
 
         return toRegisterResponse(user);
+    }
+
+    static async login(request: LoginUserRequest): Promise<LoginResponse> {
+        const loginRequest = Validation.validate(UserValidation.LOGIN, request);
+
+        const user = await prismaClient.user.findUnique({
+            where: {
+                username: loginRequest.username
+            }
+        })
+
+        if (!user) {
+            throw new ResponseError(401, "Username or password is wrong!");
+        }
+
+        const isPasswordMatch = await bcrypt.compare(loginRequest.password, user.password);
+
+        if (!isPasswordMatch) {
+            throw new ResponseError(401, "Username or password is wrong!");
+        }
+
+        const {accessToken, refreshToken} = generateTokens(user);
+        await UserService.addRefreshTokenToWhitelist(refreshToken, user.id);
+
+        return toLoginResponse(user, accessToken, refreshToken);
     }
 
 
