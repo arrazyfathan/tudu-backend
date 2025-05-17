@@ -14,6 +14,7 @@ import {
 } from "../models/auth.model";
 import {generateTokens} from "../utils/jwt";
 import logger from "../utils/logger";
+import {AuthenticatedRequest} from "../types/user.request";
 
 export class AuthService {
 
@@ -103,6 +104,16 @@ export class AuthService {
         await AuthService.addRefreshTokenToWhitelist(newRefreshToken, user.id)
 
         return toLoginResponse(user, accessToken, newRefreshToken);
+    }
+
+    static async logout(request: AuthenticatedRequest, refreshToken: string) {
+        const userId = request.payload?.id;
+        const token = await AuthService.findRefreshToken(refreshToken);
+        if(!token || token.userId !== userId) {
+            throw new ResponseError(404, "Session not found!");
+        }
+
+        await AuthService.deleteRefreshTokenById(token.id);
     }
 
 
