@@ -7,11 +7,11 @@ export type UserResponse = {
     name: string;
 }
 
-export function toUserResponse(user: User): UserResponse {
+export function toUserResponse(user: Pick<User, "id" | "username" | "name" | "email">): UserResponse {
     return {
         id: user.id,
         name: user.name,
         username: user.username,
-        email: user.email
+        email: user.email,
     }
 }

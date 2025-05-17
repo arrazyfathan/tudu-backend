@@ -13,7 +13,6 @@ import {
     toRegisterResponse, RefreshTokenRequest
 } from "../models/auth.model";
 import {generateTokens} from "../utils/jwt";
-import logger from "../utils/logger";
 import {AuthenticatedRequest} from "../types/user.request";
 
 export class AuthService {
