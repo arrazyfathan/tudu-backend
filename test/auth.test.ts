@@ -135,3 +135,84 @@ describe("POST /api/auth/refresh_token", () => {
         expect(response.body.message).toBe("Refresh token successfully");
     })
 })
+
+describe("POST /api/auth/logout", () => {
+
+    let accessToken: string | null = null;
+    let refreshToken: string | null = null;
+
+    beforeEach(async () => {
+        await AuthTest.create();
+
+        const login = await supertest(app)
+            .post("/api/auth/login")
+            .send({
+                username: "test",
+                password: "secret",
+            });
+
+        accessToken = login.body.data.token.access_token;
+        refreshToken = login.body.data.token.refresh_token;
+    });
+
+    afterEach(async () => {
+        await AuthTest.delete();
+    })
+
+    it("should reject logout when access token invalid", async () => {
+        const logout = await supertest(app)
+            .post("/api/auth/logout")
+            .set("Authorization", `invalid`)
+            .send({
+                refresh_token: refreshToken,
+            });
+
+        logger.info(logout.body);
+
+        expect(logout.body.message).toBe("Missing or invalid authorization token");
+        expect(logout.statusCode).toBe(403);
+    })
+
+    it("should reject logout when access token is missing", async () => {
+        const logout = await supertest(app)
+            .post("/api/auth/logout")
+            .send({refresh_token: refreshToken});
+
+        logger.info(logout.body);
+        expect(logout.statusCode).toBe(403);
+        expect(logout.body.message).toBe("Missing or invalid authorization token");
+    });
+
+    it("should reject logout when refresh token is missing", async () => {
+        const logout = await supertest(app)
+            .post("/api/auth/logout")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({});
+
+        logger.info(logout.body);
+        expect(logout.statusCode).toBe(400);
+        expect(logout.body.message).toBe("Refresh token is required!");
+    });
+
+    it("should reject logout when refresh token is invalid", async () => {
+        const logout = await supertest(app)
+            .post("/api/auth/logout")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({refresh_token: "invalid"});
+
+        logger.info(logout.body);
+        expect(logout.statusCode).toBe(404);
+        expect(logout.body.message).toBe("Session not found!");
+    });
+
+    it("should logout successfully", async () => {
+        const logout = await supertest(app)
+            .post("/api/auth/logout")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({refresh_token: refreshToken});
+
+        logger.info(logout.body);
+        expect(logout.statusCode).toBe(200);
+        expect(logout.body.message).toBe("Logout successfully");
+    });
+})

@@ -5,11 +5,19 @@ import {User} from "../generated/prisma/client";
 export class AuthTest {
 
     static async delete() {
+        await prismaClient.refreshToken.deleteMany({
+            where: {
+                User: {
+                    username: "test"
+                }
+            }
+        });
+
         await prismaClient.user.deleteMany({
             where: {
                 username: "test"
             }
-        })
+        });
     }
 
     static async create() {

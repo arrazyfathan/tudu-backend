@@ -107,6 +107,10 @@ export class AuthService {
     }
 
     static async logout(request: AuthenticatedRequest, refreshToken: string) {
+        if (!refreshToken) {
+            throw new ResponseError(400, "Refresh token is required!");
+        }
+
         const userId = request.payload?.id;
         const token = await AuthService.findRefreshToken(refreshToken);
         if(!token || token.userId !== userId) {
