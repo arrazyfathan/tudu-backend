@@ -1,17 +1,17 @@
-import {User} from "../../generated/prisma/client";
+import { User } from "../../generated/prisma/client";
 
 export type UserResponse = {
-    id: string;
-    email: string;
-    username: string;
-    name: string;
-}
+  id: string;
+  email: string;
+  username: string;
+  name: string;
+};
 
 export function toUserResponse(user: Pick<User, "id" | "username" | "name" | "email">): UserResponse {
-    return {
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-    }
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    email: user.email,
+  };
 }
