@@ -3,7 +3,12 @@ import { ZodError } from "zod";
 import { ResponseError } from "../errors/response.error";
 import { errorResponse } from "../utils/response";
 
-export const errorMiddleware = async (error: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorMiddleware = async (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   if (error instanceof ZodError) {
     const formattedErrors: Record<string, string> = {};
     error.errors.forEach((e) => {

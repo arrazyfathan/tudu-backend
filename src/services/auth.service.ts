@@ -5,13 +5,13 @@ import { ResponseError } from "../errors/response.error";
 import bcrypt from "bcrypt";
 import { hash } from "../utils/hash";
 import {
-  RegisterRequest,
   LoginResponse,
   LoginUserRequest,
+  RefreshTokenRequest,
+  RegisterRequest,
   RegisterResponse,
   toLoginResponse,
   toRegisterResponse,
-  RefreshTokenRequest,
 } from "../models/auth.model";
 import { generateTokens } from "../utils/jwt";
 import { AuthenticatedRequest } from "../types/user.request";
@@ -57,7 +57,7 @@ export class AuthService {
       },
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new ResponseError(401, "Username or password is wrong!");
     }
 
@@ -80,7 +80,11 @@ export class AuthService {
 
     const savedRefreshToken = await AuthService.findRefreshToken(request.refresh_token);
 
-    if (!savedRefreshToken || savedRefreshToken.revoked === true || Date.now() >= savedRefreshToken.expiredAt.getTime()) {
+    if (
+      !savedRefreshToken ||
+      savedRefreshToken.revoked === true ||
+      Date.now() >= savedRefreshToken.expiredAt.getTime()
+    ) {
       throw new ResponseError(401, "Unauthorized");
     }
 

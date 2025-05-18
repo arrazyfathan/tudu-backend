@@ -12,3 +12,4 @@ apiRouter.post("/api/auth/logout", AuthController.logout);
 // User API
 apiRouter.get("/api/user", UserController.getCurrentUser);
 apiRouter.patch("/api/user", UserController.update);
+apiRouter.delete("/api/user", UserController.delete);

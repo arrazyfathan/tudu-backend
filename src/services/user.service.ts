@@ -65,4 +65,18 @@ export class UserService {
 
     return toUserResponse(user);
   }
+
+  static async delete(request: AuthenticatedRequest): Promise<string> {
+    const userId = request.payload?.id;
+    await prismaClient.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return "User deleted successfully";
+  }
 }

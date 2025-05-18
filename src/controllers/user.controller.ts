@@ -1,4 +1,4 @@
-import { Response, NextFunction } from "express";
+import { NextFunction, Response } from "express";
 import { AuthenticatedRequest } from "../types/user.request";
 import { UserService } from "../services/user.service";
 import { successResponse } from "../utils/response";
@@ -17,6 +17,15 @@ export class UserController {
     try {
       const response = await UserService.update(req);
       res.status(200).json(successResponse("Successfully update user", response));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async delete(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const response = await UserService.delete(req);
+      res.status(200).json(successResponse(response, null));
     } catch (error) {
       next(error);
     }
