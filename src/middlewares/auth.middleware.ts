@@ -1,11 +1,16 @@
-import { Response, NextFunction } from "express";
+import { NextFunction, Response } from "express";
 import { errorResponse } from "../utils/response";
 import jwt from "jsonwebtoken";
 import { AuthenticatedRequest, JwtPayload } from "../types/user.request";
+import { prismaClient } from "../config/database";
 
 const JWT_SECRET = process.env.JWT_ACCESS_SECRET;
 
-export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -21,6 +26,13 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const user = await prismaClient.user.findUnique({ where: { id: decoded.id } });
+
+    if (!user || user.deletedAt) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+
     req.payload = decoded;
     next();
     return;

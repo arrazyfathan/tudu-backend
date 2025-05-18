@@ -41,7 +41,11 @@ export function toRegisterResponse(user: User): RegisterResponse {
   };
 }
 
-export function toLoginResponse(user: User, accessToken: string, refreshToken: string): LoginResponse {
+export function toLoginResponse(
+  user: User,
+  accessToken: string,
+  refreshToken: string,
+): LoginResponse {
   return {
     id: user.id,
     name: user.name,

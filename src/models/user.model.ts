@@ -13,7 +13,9 @@ export type UpdateUserRequest = {
   password?: string;
 };
 
-export function toUserResponse(user: Pick<User, "id" | "username" | "name" | "email">): UserResponse {
+export function toUserResponse(
+  user: Pick<User, "id" | "username" | "name" | "email">,
+): UserResponse {
   return {
     id: user.id,
     name: user.name,
