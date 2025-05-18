@@ -77,6 +77,12 @@ export class UserService {
       },
     });
 
+    await prismaClient.refreshToken.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
     return "User deleted successfully";
   }
 }
