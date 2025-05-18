@@ -7,6 +7,12 @@ export type UserResponse = {
   name: string;
 };
 
+export type UpdateUserRequest = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
+
 export function toUserResponse(user: Pick<User, "id" | "username" | "name" | "email">): UserResponse {
   return {
     id: user.id,
