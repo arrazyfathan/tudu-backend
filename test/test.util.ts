@@ -6,7 +6,7 @@ export class AuthTest {
   static async delete() {
     await prismaClient.refreshToken.deleteMany({
       where: {
-        User: {
+        user: {
           username: "test",
         },
       },
