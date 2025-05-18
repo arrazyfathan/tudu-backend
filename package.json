@@ -21,10 +21,11 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
     "prepare": "husky"
   },
   "jest": {
+    "collectCoverage": true,
     "transform": {
       "^.+\\.[t|j]sx?$": "babel-jest"
     }

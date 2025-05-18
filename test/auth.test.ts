@@ -101,7 +101,7 @@ describe("POST /api/auth/refresh_token", () => {
   it("should success refresh token", async () => {
     const responseLogin = await supertest(app).post("/api/auth/login").send({
       username: "razy",
-      password: "secret",
+      password: "rahasia",
     });
 
     const response = await supertest(app).post("/api/auth/refresh_token").send({
@@ -135,9 +135,12 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("should reject logout when access token invalid", async () => {
-    const logout = await supertest(app).post("/api/auth/logout").set("Authorization", `invalid`).send({
-      refresh_token: refreshToken,
-    });
+    const logout = await supertest(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `invalid`)
+      .send({
+        refresh_token: refreshToken,
+      });
 
     logger.info(logout.body);
 
@@ -146,7 +149,9 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("should reject logout when access token is missing", async () => {
-    const logout = await supertest(app).post("/api/auth/logout").send({ refresh_token: refreshToken });
+    const logout = await supertest(app)
+      .post("/api/auth/logout")
+      .send({ refresh_token: refreshToken });
 
     logger.info(logout.body);
     expect(logout.statusCode).toBe(403);
@@ -154,7 +159,10 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("should reject logout when refresh token is missing", async () => {
-    const logout = await supertest(app).post("/api/auth/logout").set("Authorization", `Bearer ${accessToken}`).send({});
+    const logout = await supertest(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({});
 
     logger.info(logout.body);
     expect(logout.statusCode).toBe(400);
@@ -162,7 +170,10 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("should reject logout when refresh token is invalid", async () => {
-    const logout = await supertest(app).post("/api/auth/logout").set("Authorization", `Bearer ${accessToken}`).send({ refresh_token: "invalid" });
+    const logout = await supertest(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ refresh_token: "invalid" });
 
     logger.info(logout.body);
     expect(logout.statusCode).toBe(404);
@@ -170,7 +181,10 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("should logout successfully", async () => {
-    const logout = await supertest(app).post("/api/auth/logout").set("Authorization", `Bearer ${accessToken}`).send({ refresh_token: refreshToken });
+    const logout = await supertest(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ refresh_token: refreshToken });
 
     logger.info(logout.body);
     expect(logout.statusCode).toBe(200);
