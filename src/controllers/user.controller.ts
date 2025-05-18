@@ -12,4 +12,13 @@ export class UserController {
       next(error);
     }
   }
+
+  static async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const response = await UserService.update(req);
+      res.status(200).json(successResponse("Successfully update user", response));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
