@@ -1,6 +1,8 @@
 import { prismaClient } from "../src/config/database";
 import bcrypt from "bcrypt";
-import { User } from "../generated/prisma/client";
+import { RefreshToken, User } from "../generated/prisma/client";
+import supertest from "supertest";
+import { app } from "../src/app";
 
 export class AuthTest {
   static async delete() {
@@ -42,5 +44,24 @@ export class AuthTest {
     }
 
     return user;
+  }
+
+  static async getRefreshToken(): Promise<RefreshToken[]> {
+    return prismaClient.refreshToken.findMany({
+      where: {
+        user: {
+          username: "test",
+        },
+      },
+    });
+  }
+
+  static async createAccessToken() {
+    await AuthTest.create();
+    const login = await supertest(app).post("/api/auth/login").send({
+      username: "test",
+      password: "secret",
+    });
+    return login.body.data.token.access_token;
   }
 }
