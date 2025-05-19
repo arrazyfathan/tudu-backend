@@ -1,6 +1,6 @@
 import { prismaClient } from "../src/config/database";
 import bcrypt from "bcrypt";
-import { User } from "../generated/prisma/client";
+import { RefreshToken, User } from "../generated/prisma/client";
 
 export class AuthTest {
   static async delete() {
@@ -42,5 +42,15 @@ export class AuthTest {
     }
 
     return user;
+  }
+
+  static async getRefreshToken(): Promise<RefreshToken[]> {
+    return prismaClient.refreshToken.findMany({
+      where: {
+        user: {
+          username: "test",
+        },
+      },
+    });
   }
 }

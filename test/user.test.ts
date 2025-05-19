@@ -114,3 +114,47 @@ describe("PATCH /api/user", () => {
     expect(response.statusCode).toBe(200);
   });
 });
+
+describe("DElETE /api/user", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    await AuthTest.create();
+
+    const login = await supertest(app).post("/api/auth/login").send({
+      username: "test",
+      password: "secret",
+    });
+
+    accessToken = login.body.data.token.access_token;
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+  });
+
+  it("should reject delete user when access token is invalid", async () => {
+    const response = await supertest(app).delete("/api/user").set("Authorization", `invalid`);
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
+
+  it("should success deleted user", async () => {
+    const response = await supertest(app)
+      .delete("/api/user")
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    const user = await AuthTest.get();
+    const refreshTokens = await AuthTest.getRefreshToken();
+
+    logger.info(response.body);
+    logger.info("user", user);
+    logger.info("refreshTokens", refreshTokens);
+
+    expect(response.statusCode).toBe(200);
+    expect(user.deletedAt).not.toBeNull();
+    expect(refreshTokens.length).toBe(0);
+  });
+});
