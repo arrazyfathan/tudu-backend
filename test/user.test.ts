@@ -7,14 +7,7 @@ describe("GET /api/user", () => {
   let accessToken: string | null = null;
 
   beforeEach(async () => {
-    await AuthTest.create();
-
-    const login = await supertest(app).post("/api/auth/login").send({
-      username: "test",
-      password: "secret",
-    });
-
-    accessToken = login.body.data.token.access_token;
+    accessToken = await AuthTest.createAccessToken();
   });
 
   afterEach(async () => {
@@ -37,14 +30,7 @@ describe("PATCH /api/user", () => {
   let accessToken: string | null = null;
 
   beforeEach(async () => {
-    await AuthTest.create();
-
-    const login = await supertest(app).post("/api/auth/login").send({
-      username: "test",
-      password: "secret",
-    });
-
-    accessToken = login.body.data.token.access_token;
+    accessToken = await AuthTest.createAccessToken();
   });
 
   afterEach(async () => {
@@ -119,14 +105,7 @@ describe("DElETE /api/user", () => {
   let accessToken: string | null = null;
 
   beforeEach(async () => {
-    await AuthTest.create();
-
-    const login = await supertest(app).post("/api/auth/login").send({
-      username: "test",
-      password: "secret",
-    });
-
-    accessToken = login.body.data.token.access_token;
+    accessToken = await AuthTest.createAccessToken();
   });
 
   afterEach(async () => {
