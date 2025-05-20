@@ -20,6 +20,10 @@ model User {
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
 
+  tags       Tag[]
+  categories Category[]
+  Journal    Journal[]
+
   @@map("users")
 }
 
@@ -34,4 +38,59 @@ model RefreshToken {
   expiredAt   DateTime
 
   @@map("refresh_token")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user       User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  JournalTag JournalTag[]
+
+  @@unique([name, userId])
+  @@map("tags")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user    User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Journal Journal[]
+
+  @@unique([name, userId])
+  @@map("categories")
+}
+
+model Journal {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId     String
+  categoryId String?
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags     JournalTag[]
+
+  @@map("journals")
+}
+
+model JournalTag {
+  journalId String
+  tagId     String
+
+  journal Journal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([journalId, tagId])
+  @@map("journal_tags")
 }
