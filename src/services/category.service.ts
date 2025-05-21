@@ -23,7 +23,7 @@ export class CategoryService {
         userId: true,
       },
       orderBy: {
-        createdAt: "desc",
+        name: "asc",
       },
     });
   }

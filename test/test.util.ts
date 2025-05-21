@@ -65,3 +65,28 @@ export class AuthTest {
     return login.body.data.token.access_token;
   }
 }
+
+export class CategoryTest {
+  static async delete() {
+    await prismaClient.category.deleteMany({
+      where: {
+        user: {
+          username: "test",
+        },
+      },
+    });
+  }
+
+  static async create() {
+    await prismaClient.category.create({
+      data: {
+        name: "test",
+        user: {
+          connect: {
+            username: "test",
+          },
+        },
+      },
+    });
+  }
+}
