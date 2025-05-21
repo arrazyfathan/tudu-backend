@@ -17,3 +17,4 @@ apiRouter.delete("/api/user", UserController.delete);
 
 // Categories API
 apiRouter.get("/api/categories", CategoryController.getCategories);
+apiRouter.post("/api/categories", CategoryController.createCategory);
