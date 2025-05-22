@@ -98,3 +98,60 @@ describe("POST api/categories", () => {
     expect(response.body.errors.name).toBe("Required");
   });
 });
+
+describe("PATCH /api/categories/:categoryId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await CategoryTest.create();
+  });
+
+  afterEach(async () => {
+    await CategoryTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to update the category name", async () => {
+    const currentCategory = await CategoryTest.get();
+
+    const response = await supertest(app)
+      .patch(`/api/categories/${currentCategory.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "updated category",
+      });
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data.name).toBe("Updated category");
+  });
+
+  it("should reject update when id not valid", async () => {
+    const response = await supertest(app)
+      .patch(`/api/categories/invalid`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "updated category",
+      });
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Category not found");
+  });
+
+  it("should reject update when name is not valid", async () => {
+    const currentCategory = await CategoryTest.get();
+
+    const response = await supertest(app)
+      .patch(`/api/categories/${currentCategory.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "",
+      });
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors.name).toBe("String must contain at least 1 character(s)");
+  });
+});
