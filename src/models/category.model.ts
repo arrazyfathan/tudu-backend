@@ -10,6 +10,11 @@ export type CreateCategoryRequest = {
   name: string;
 };
 
+export type UpdateCategoryRequest = {
+  id: string;
+  name: string;
+};
+
 export function toCategoriesResponse(
   category: Pick<Category, "id" | "name" | "userId">,
 ): CategoryResponse {

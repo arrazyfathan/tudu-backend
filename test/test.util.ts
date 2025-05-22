@@ -1,6 +1,6 @@
 import { prismaClient } from "../src/config/database";
 import bcrypt from "bcrypt";
-import { RefreshToken, User } from "../generated/prisma/client";
+import { Category, RefreshToken, User } from "../generated/prisma/client";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -88,5 +88,19 @@ export class CategoryTest {
         },
       },
     });
+  }
+
+  static async get(): Promise<Category> {
+    const category = await prismaClient.category.findFirst({
+      where: {
+        name: "test",
+      },
+    });
+
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    return category;
   }
 }
