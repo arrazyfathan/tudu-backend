@@ -155,3 +155,49 @@ describe("PATCH /api/categories/:categoryId", () => {
     expect(response.body.errors.name).toBe("String must contain at least 1 character(s)");
   });
 });
+
+describe("DELETE /api/categories/:categoryId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await CategoryTest.create();
+  });
+
+  afterEach(async () => {
+    await CategoryTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to delete category", async () => {
+    const currentCategory = await CategoryTest.get();
+
+    const response = await supertest(app)
+      .delete(`/api/categories/${currentCategory.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should reject delete when categoryId is invalid", async () => {
+    const response = await supertest(app)
+      .delete(`/api/categories/invalid`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Category not found");
+  });
+
+  it("should reject delete when category is globals", async () => {
+    const currentCategory = await CategoryTest.getGlobalsCategory();
+    const response = await supertest(app)
+      .delete(`/api/categories/${currentCategory.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    logger.info(response.body);
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("You are not allowed to delete this category.");
+  });
+});
