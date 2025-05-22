@@ -103,4 +103,18 @@ export class CategoryTest {
 
     return category;
   }
+
+  static async getGlobalsCategory(): Promise<Category> {
+    const category = await prismaClient.category.findFirst({
+      where: {
+        userId: null,
+      },
+    });
+
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    return category;
+  }
 }
