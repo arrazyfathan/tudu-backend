@@ -3,6 +3,7 @@ import {
   CategoryResponse,
   CreateCategoryRequest,
   toCategoriesResponse,
+  UpdateCategoryRequest,
 } from "../models/category.model";
 import { prismaClient } from "../config/database";
 import { ResponseError } from "../errors/response.error";
@@ -34,19 +35,7 @@ export class CategoryService {
   ): Promise<CategoryResponse> {
     const requestBody = Validation.validate(CategoryValidation.CREATE, categoryRequest);
     const userId = request.payload?.id;
-
-    const existingCategory = await prismaClient.category.findFirst({
-      where: {
-        name: {
-          equals: requestBody.name,
-          mode: "insensitive",
-        },
-      },
-    });
-
-    if (existingCategory) {
-      throw new ResponseError(409, "Category already exists");
-    }
+    await CategoryService.checkCategoryExistence(requestBody.name, userId);
 
     const category = await prismaClient.category.create({
       data: {
@@ -56,5 +45,57 @@ export class CategoryService {
     });
 
     return toCategoriesResponse(category);
+  }
+
+  static async update(
+    request: AuthenticatedRequest,
+    updateCategoryRequest: UpdateCategoryRequest,
+  ): Promise<CategoryResponse> {
+    const userId = request.payload?.id;
+    const requestBody = Validation.validate(CategoryValidation.UPDATE, updateCategoryRequest);
+
+    const isCategoryExist = await prismaClient.category.findUnique({
+      where: {
+        id: updateCategoryRequest.id,
+      },
+    });
+
+    if (!isCategoryExist) {
+      throw new ResponseError(404, "Category not found");
+    }
+
+    if (isCategoryExist.userId !== userId || isCategoryExist.userId === null) {
+      throw new ResponseError(403, "You are not allowed to update this category.");
+    }
+
+    await CategoryService.checkCategoryExistence(requestBody.name, userId);
+
+    const category = await prismaClient.category.update({
+      where: {
+        id: updateCategoryRequest.id,
+      },
+      data: {
+        name: capitalizeFirstLetter(requestBody.name),
+        userId,
+      },
+    });
+
+    return toCategoriesResponse(category);
+  }
+
+  static async checkCategoryExistence(name: string, userId?: string) {
+    const existingCategory = await prismaClient.category.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+        OR: [{ userId }, { userId: null }],
+      },
+    });
+
+    if (existingCategory) {
+      throw new ResponseError(409, "Category already exists");
+    }
   }
 }
