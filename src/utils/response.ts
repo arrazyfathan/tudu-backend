@@ -20,3 +20,7 @@ export interface ApiResponse<T> {
   data?: T;
   errors?: Record<string, string>; // optional for error responses
 }
+
+export type CommonResponse = {
+  message: string;
+};

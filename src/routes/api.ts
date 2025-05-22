@@ -19,3 +19,4 @@ apiRouter.delete("/api/user", UserController.delete);
 apiRouter.get("/api/categories", CategoryController.getCategories);
 apiRouter.post("/api/categories", CategoryController.createCategory);
 apiRouter.patch("/api/categories/:categoryId", CategoryController.updateCategory);
+apiRouter.delete("/api/categories/:categoryId", CategoryController.deleteCategory);

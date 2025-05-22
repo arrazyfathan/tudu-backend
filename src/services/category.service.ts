@@ -10,6 +10,7 @@ import { ResponseError } from "../errors/response.error";
 import { capitalizeFirstLetter } from "../utils/string.utils";
 import { Validation } from "../utils/validation";
 import { CategoryValidation } from "../validations/category.validation";
+import { CommonResponse } from "../utils/response";
 
 export class CategoryService {
   static async get(request: AuthenticatedRequest): Promise<CategoryResponse[]> {
@@ -81,6 +82,33 @@ export class CategoryService {
     });
 
     return toCategoriesResponse(category);
+  }
+
+  static async delete(request: AuthenticatedRequest, categoryId: string): Promise<CommonResponse> {
+    const userId = request.payload?.id;
+    const requestBody = Validation.validate(CategoryValidation.DELETE, categoryId);
+
+    const isCategoryExist = await prismaClient.category.findUnique({
+      where: {
+        id: requestBody,
+      },
+    });
+
+    if (!isCategoryExist) {
+      throw new ResponseError(404, "Category not found");
+    }
+
+    if (isCategoryExist.userId !== userId || isCategoryExist.userId === null) {
+      throw new ResponseError(403, "You are not allowed to delete this category.");
+    }
+
+    await prismaClient.category.delete({
+      where: {
+        id: categoryId,
+      },
+    });
+
+    return { message: "Category deleted successfully" };
   }
 
   static async checkCategoryExistence(name: string, userId?: string) {
