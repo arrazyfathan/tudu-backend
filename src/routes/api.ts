@@ -3,6 +3,7 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 import { AuthController } from "../controllers/auth.controller";
 import { UserController } from "../controllers/user.controller";
 import { CategoryController } from "../controllers/category.controllerr";
+import { TagController } from "../controllers/tag.controller";
 
 export const apiRouter = express.Router();
 apiRouter.use(authMiddleware);
@@ -20,3 +21,9 @@ apiRouter.get("/api/categories", CategoryController.getCategories);
 apiRouter.post("/api/categories", CategoryController.createCategory);
 apiRouter.patch("/api/categories/:categoryId", CategoryController.updateCategory);
 apiRouter.delete("/api/categories/:categoryId", CategoryController.deleteCategory);
+
+// Tag API
+apiRouter.get("/api/tags", TagController.getTags);
+apiRouter.post("/api/tags", TagController.createTag);
+apiRouter.patch("/api/tags/:tagId", TagController.updateTag);
+apiRouter.delete("/api/tags/:tagId", TagController.deleteTag);
