@@ -1,7 +1,6 @@
 import { AuthTest, CategoryTest } from "./test.util";
 import supertest from "supertest";
 import { app } from "../src/app";
-import logger from "../src/utils/logger";
 
 describe("GET api/categories", () => {
   let accessToken: string | null = null;
@@ -19,8 +18,6 @@ describe("GET api/categories", () => {
       .get("/api/categories")
       .set("Authorization", `Bearer ${accessToken}`);
 
-    logger.info(response.body);
-
     expect(response.statusCode).toBe(200);
     expect(response.body.data.length).toBeGreaterThanOrEqual(1);
   });
@@ -29,8 +26,6 @@ describe("GET api/categories", () => {
     const response = await supertest(app)
       .get("/api/categories")
       .set("Authorization", `Bearer invalid}`);
-
-    logger.info(response.body);
 
     expect(response.statusCode).toBe(401);
   });
@@ -56,8 +51,6 @@ describe("POST api/categories", () => {
       .send({
         name: "test category",
       });
-
-    logger.info(response.body);
   });
 
   it("should reject add category when category is exist", async () => {
@@ -67,8 +60,6 @@ describe("POST api/categories", () => {
       .send({
         name: "test",
       });
-
-    logger.info(response.body);
 
     expect(response.statusCode).toBe(409);
     expect(response.body.message).toBe("Category already exists");
@@ -82,7 +73,6 @@ describe("POST api/categories", () => {
         name: "",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("String must contain at least 1 character(s)");
   });
@@ -93,7 +83,6 @@ describe("POST api/categories", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({});
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("Required");
   });
@@ -122,7 +111,6 @@ describe("PATCH /api/categories/:categoryId", () => {
         name: "updated category",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body.data.name).toBe("Updated category");
   });
@@ -135,7 +123,6 @@ describe("PATCH /api/categories/:categoryId", () => {
         name: "updated category",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(404);
     expect(response.body.message).toBe("Category not found");
   });
@@ -150,7 +137,6 @@ describe("PATCH /api/categories/:categoryId", () => {
         name: "",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("String must contain at least 1 character(s)");
   });
@@ -176,7 +162,6 @@ describe("DELETE /api/categories/:categoryId", () => {
       .delete(`/api/categories/${currentCategory.id}`)
       .set("Authorization", `Bearer ${accessToken}`);
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
   });
 
@@ -185,7 +170,6 @@ describe("DELETE /api/categories/:categoryId", () => {
       .delete(`/api/categories/invalid`)
       .set("Authorization", `Bearer ${accessToken}`);
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(404);
     expect(response.body.message).toBe("Category not found");
   });
@@ -196,7 +180,6 @@ describe("DELETE /api/categories/:categoryId", () => {
       .delete(`/api/categories/${currentCategory.id}`)
       .set("Authorization", `Bearer ${accessToken}`);
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(403);
     expect(response.body.message).toBe("You are not allowed to delete this category.");
   });
