@@ -35,5 +35,13 @@ export class TagController {
     }
   }
 
-  static async deleteTag() {}
+  static async deleteTag(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const tagId = req.params.tagId;
+      const response = await TagService.delete(req, tagId);
+      res.status(200).json(successResponse(response.message, null));
+    } catch (error) {
+      next(error);
+    }
+  }
 }

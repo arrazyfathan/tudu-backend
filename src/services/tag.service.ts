@@ -82,7 +82,32 @@ export class TagService {
     return toTagResponse(tag);
   }
 
-  static async delete() {}
+  static async delete(req: AuthenticatedRequest, tagId: string) {
+    const userId = req.payload?.id;
+    const requestBody = Validation.validate(TagValidation.DELETE, tagId);
+
+    const isTagExist = await prismaClient.tag.findUnique({
+      where: {
+        id: requestBody,
+      },
+    });
+
+    if (!isTagExist) {
+      throw new ResponseError(404, "Tag not found");
+    }
+
+    if (isTagExist.userId !== userId || isTagExist.userId === null) {
+      throw new ResponseError(403, "You are not allowed to delete this tag.");
+    }
+
+    await prismaClient.tag.delete({
+      where: {
+        id: tagId,
+      },
+    });
+
+    return { message: "Tag deleted successfully" };
+  }
 
   static async checkTagExistence(name: string, userId?: string) {
     const existingTag = await prismaClient.tag.findFirst({
