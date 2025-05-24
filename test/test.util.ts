@@ -1,6 +1,6 @@
 import { prismaClient } from "../src/config/database";
 import bcrypt from "bcrypt";
-import { Category, RefreshToken, User } from "../generated/prisma/client";
+import { Category, RefreshToken, Tag, User } from "../generated/prisma/client";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -116,5 +116,58 @@ export class CategoryTest {
     }
 
     return category;
+  }
+}
+
+export class TagTest {
+  static async delete() {
+    await prismaClient.tag.deleteMany({
+      where: {
+        user: {
+          username: "test",
+        },
+      },
+    });
+  }
+
+  static async create() {
+    await prismaClient.tag.create({
+      data: {
+        name: "test",
+        user: {
+          connect: {
+            username: "test",
+          },
+        },
+      },
+    });
+  }
+
+  static async get(): Promise<Tag> {
+    const tag = await prismaClient.tag.findFirst({
+      where: {
+        name: "test",
+      },
+    });
+
+    if (!tag) {
+      throw new Error("Tag not found");
+    }
+
+    return tag;
+  }
+
+  static async getGlobalsCategory(): Promise<Tag> {
+    const tag = await prismaClient.tag.findFirst({
+      where: {
+        userId: null,
+      },
+    });
+
+    if (!tag) {
+      throw new Error("Tag not found");
+    }
+
+    return tag;
   }
 }
