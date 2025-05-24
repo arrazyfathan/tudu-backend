@@ -47,7 +47,7 @@ prismaClient.$on("warn", (e: any) => {
 });
 
 prismaClient.$on("query", (e: any) => {
-  logger.info("Prisma query", {
+  logger.debug("Prisma query", {
     message: e,
     //params: e.params,
     //query: e.query,
