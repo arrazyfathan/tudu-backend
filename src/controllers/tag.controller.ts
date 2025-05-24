@@ -2,7 +2,7 @@ import { AuthenticatedRequest } from "../types/user.request";
 import { NextFunction, Response } from "express";
 import { successResponse } from "../utils/response";
 import { TagService } from "../services/tag.service";
-import { CreateTagRequest } from "../models/tag.model";
+import { CreateTagRequest, UpdateTagRequest } from "../models/tag.model";
 
 export class TagController {
   static async getTags(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -24,7 +24,16 @@ export class TagController {
     }
   }
 
-  static async updateTag() {}
+  static async updateTag(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const requestBody = req.body as UpdateTagRequest;
+      requestBody.id = req.params.tagId;
+      const response = await TagService.update(req, requestBody);
+      res.status(200).json(successResponse("Successfully update tag", response));
+    } catch (error) {
+      next(error);
+    }
+  }
 
   static async deleteTag() {}
 }
