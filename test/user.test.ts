@@ -1,7 +1,6 @@
 import { AuthTest } from "./test.util";
 import supertest from "supertest";
 import { app } from "../src/app";
-import logger from "../src/utils/logger";
 
 describe("GET /api/user", () => {
   let accessToken: string | null = null;
@@ -19,7 +18,6 @@ describe("GET /api/user", () => {
       .get("/api/user")
       .set("Authorization", `Bearer ${accessToken}`);
 
-    logger.info(user.body);
     expect(user.body.data.name).toBe("test");
     expect(user.body.data.email).toBe("test");
     expect(user.body.data.username).toBe("test");
@@ -45,7 +43,6 @@ describe("PATCH /api/user", () => {
         email: "razy@mail.com",
       });
 
-    logger.info(response.body);
     expect(response.body.message).toBe("Email is already taken");
     expect(response.statusCode).toBe(409);
   });
@@ -58,7 +55,6 @@ describe("PATCH /api/user", () => {
         email: "razy",
       });
 
-    logger.info(response.body);
     expect(response.body.errors.email).toBe("Invalid email");
   });
 
@@ -70,7 +66,6 @@ describe("PATCH /api/user", () => {
         email: "testing@mail.com",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body.data.email).toBe("testing@mail.com");
   });
@@ -83,7 +78,6 @@ describe("PATCH /api/user", () => {
         name: "testing",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body.data.name).toBe("testing");
   });
@@ -96,7 +90,6 @@ describe("PATCH /api/user", () => {
         password: "testing",
       });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
   });
 });
@@ -115,7 +108,6 @@ describe("DElETE /api/user", () => {
   it("should reject delete user when access token is invalid", async () => {
     const response = await supertest(app).delete("/api/user").set("Authorization", `invalid`);
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(403);
     expect(response.body.message).toBe("Missing or invalid authorization token");
   });
@@ -127,10 +119,6 @@ describe("DElETE /api/user", () => {
 
     const user = await AuthTest.get();
     const refreshTokens = await AuthTest.getRefreshToken();
-
-    logger.info(response.body);
-    logger.info("user", user);
-    logger.info("refreshTokens", refreshTokens);
 
     expect(response.statusCode).toBe(200);
     expect(user.deletedAt).not.toBeNull();

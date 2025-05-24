@@ -1,4 +1,4 @@
-import { AuthTest } from "./test.util";
+import { AuthTest, TagTest } from "./test.util";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -86,5 +86,102 @@ describe("POST /api/tags", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("Required");
+  });
+});
+
+describe("PATCH /api/tags/:tagId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await TagTest.create();
+  });
+
+  afterEach(async () => {
+    await TagTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to update the tag name", async () => {
+    const currentTag = await TagTest.get();
+
+    const response = await supertest(app)
+      .patch(`/api/tags/${currentTag.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "updated",
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data.name).toBe("updated");
+  });
+
+  it("should reject update when id not valid", async () => {
+    const response = await supertest(app)
+      .patch(`/api/tags/invalid`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "updated",
+      });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Tag not found");
+  });
+
+  it("should reject update when name is not valid", async () => {
+    const currentTag = await TagTest.get();
+
+    const response = await supertest(app)
+      .patch(`/api/tags/${currentTag.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "updated tag",
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors.name).toBe("Tags cannot contain spaces");
+  });
+});
+
+describe("DELETE /api/tags/:tagId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await TagTest.create();
+  });
+
+  afterEach(async () => {
+    await TagTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to delete tag", async () => {
+    const currentTag = await TagTest.get();
+
+    const response = await supertest(app)
+      .delete(`/api/tags/${currentTag.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should reject delete when tagId is invalid", async () => {
+    const response = await supertest(app)
+      .delete(`/api/tags/invalid`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Tag not found");
+  });
+
+  it("should reject delete when tag is globals", async () => {
+    const currentTag = await TagTest.getGlobalsCategory();
+    const response = await supertest(app)
+      .delete(`/api/tags/${currentTag.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("You are not allowed to delete this tag.");
   });
 });

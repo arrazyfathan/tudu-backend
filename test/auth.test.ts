@@ -1,7 +1,6 @@
 import { AuthTest } from "./test.util";
 import { app } from "../src/app";
 import supertest from "supertest";
-import logger from "../src/utils/logger";
 
 describe("POST /api/auth/register", () => {
   afterEach(async () => {
@@ -16,7 +15,6 @@ describe("POST /api/auth/register", () => {
       email: "razy@mail.com",
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(409);
     expect(response.body.message).toBe("User already exists");
   });
@@ -29,7 +27,6 @@ describe("POST /api/auth/register", () => {
       email: "razy@mail.com",
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(409);
     expect(response.body.message).toBe("Email is already taken");
   });
@@ -42,7 +39,6 @@ describe("POST /api/auth/register", () => {
       email: "test@mail.com",
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(201);
     expect(response.body.message).toBe("User registered successfully");
     expect(response.body.data).toBeDefined();
@@ -60,8 +56,6 @@ describe("POST /api/auth/login", () => {
       password: "",
     });
 
-    logger.info(response.body);
-
     expect(response.statusCode).toBe(400);
     expect(response.body.errors).toBeDefined();
     expect(response.body.message).toBe("Validation failed");
@@ -72,8 +66,6 @@ describe("POST /api/auth/login", () => {
       username: "razy",
       password: "secret",
     });
-
-    logger.info(response.body);
   });
 });
 
@@ -83,7 +75,6 @@ describe("POST /api/auth/refresh_token", () => {
       refresh_token: null,
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(400);
     expect(response.body.message).toBe("Refresh token is required!");
   });
@@ -93,7 +84,6 @@ describe("POST /api/auth/refresh_token", () => {
       refresh_token: "invalid",
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(401);
     expect(response.body.message).toBe("Unauthorized");
   });
@@ -108,7 +98,6 @@ describe("POST /api/auth/refresh_token", () => {
       refresh_token: responseLogin.body.data.token.refresh_token,
     });
 
-    logger.info(response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body.message).toBe("Refresh token successfully");
   });
@@ -142,8 +131,6 @@ describe("POST /api/auth/logout", () => {
         refresh_token: refreshToken,
       });
 
-    logger.info(logout.body);
-
     expect(logout.body.message).toBe("Missing or invalid authorization token");
     expect(logout.statusCode).toBe(403);
   });
@@ -153,7 +140,6 @@ describe("POST /api/auth/logout", () => {
       .post("/api/auth/logout")
       .send({ refresh_token: refreshToken });
 
-    logger.info(logout.body);
     expect(logout.statusCode).toBe(403);
     expect(logout.body.message).toBe("Missing or invalid authorization token");
   });
@@ -164,7 +150,6 @@ describe("POST /api/auth/logout", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({});
 
-    logger.info(logout.body);
     expect(logout.statusCode).toBe(400);
     expect(logout.body.message).toBe("Refresh token is required!");
   });
@@ -175,7 +160,6 @@ describe("POST /api/auth/logout", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ refresh_token: "invalid" });
 
-    logger.info(logout.body);
     expect(logout.statusCode).toBe(404);
     expect(logout.body.message).toBe("Session not found!");
   });
@@ -186,7 +170,6 @@ describe("POST /api/auth/logout", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ refresh_token: refreshToken });
 
-    logger.info(logout.body);
     expect(logout.statusCode).toBe(200);
     expect(logout.body.message).toBe("Logout successfully");
   });
