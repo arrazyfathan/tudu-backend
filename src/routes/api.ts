@@ -4,6 +4,7 @@ import { AuthController } from "../controllers/auth.controller";
 import { UserController } from "../controllers/user.controller";
 import { CategoryController } from "../controllers/category.controllerr";
 import { TagController } from "../controllers/tag.controller";
+import { JournalController } from "../controllers/journal.controller";
 
 export const apiRouter = express.Router();
 apiRouter.use(authMiddleware);
@@ -27,3 +28,6 @@ apiRouter.get("/api/tags", TagController.getTags);
 apiRouter.post("/api/tags", TagController.createTag);
 apiRouter.patch("/api/tags/:tagId", TagController.updateTag);
 apiRouter.delete("/api/tags/:tagId", TagController.deleteTag);
+
+// Journal API
+apiRouter.post("/api/journals", JournalController.createJournal);
