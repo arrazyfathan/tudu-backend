@@ -1,5 +1,8 @@
 import { successResponse } from "../utils/response";
 import { JournalService } from "../services/journal.service";
+import { AuthenticatedRequest } from "../types/user.request";
+import { NextFunction, Response } from "express";
+import { CreateJournalRequest } from "../models/journal.model";
 
 export class JournalController {
   static async createJournal(

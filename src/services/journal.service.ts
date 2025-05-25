@@ -18,6 +18,19 @@ export class JournalService {
         ? null
         : validated.categoryId;
 
+    if (categoryId) {
+      const category = await prismaClient.category.findFirst({
+        where: {
+          id: categoryId,
+          OR: [{ userId }, { userId: null }],
+        },
+      });
+
+      if (!category) {
+        throw new ResponseError(404, "Category not found");
+      }
+    }
+
     const date = validated.date ? new Date(validated.date) : new Date();
 
     if (isNaN(date.getTime())) {
@@ -44,7 +57,7 @@ export class JournalService {
         content: validated.content,
         date,
         categoryId,
-        userId,
+        userId: userId!,
         tags: {
           create: validated.tagIds.map((tagId) => ({
             tag: { connect: { id: tagId } },
