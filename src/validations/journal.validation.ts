@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodType } from "zod";
 
 export class JournalValidation {
   static readonly CREATE = z.object({
@@ -19,5 +19,11 @@ export class JournalValidation {
 
   static readonly DELETE = z.object({
     id: z.string(),
+  });
+
+  static readonly GET: ZodType = z.object({
+    title: z.string().min(1).optional(),
+    page: z.number().min(1).positive(),
+    size: z.number().min(1).max(100).positive(),
   });
 }

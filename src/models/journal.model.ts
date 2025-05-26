@@ -37,6 +37,12 @@ export type DeleteJournalRequest = {
   id: string;
 };
 
+export type GetJournalRequest = {
+  title?: string;
+  page: number;
+  size: number;
+};
+
 export function toJournalResponse(
   journal: Journal & {
     category: { id: string; name: string } | null;
