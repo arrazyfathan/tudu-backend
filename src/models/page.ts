@@ -1,6 +1,7 @@
 export type Paging = {
   size: number;
   total_page: number;
+  total_items: number;
   current_page: number;
 };
 

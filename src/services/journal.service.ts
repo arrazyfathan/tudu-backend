@@ -1,9 +1,15 @@
 import { AuthenticatedRequest } from "../types/user.request";
-import { CreateJournalRequest, JournalResponse, toJournalResponse } from "../models/journal.model";
+import {
+  CreateJournalRequest,
+  GetJournalRequest,
+  JournalResponse,
+  toJournalResponse,
+} from "../models/journal.model";
 import { Validation } from "../utils/validation";
 import { JournalValidation } from "../validations/journal.validation";
 import { prismaClient } from "../config/database";
 import { ResponseError } from "../errors/response.error";
+import { Pageable } from "../models/page";
 
 export class JournalService {
   static async create(
@@ -85,5 +91,77 @@ export class JournalService {
     });
 
     return toJournalResponse(journal);
+  }
+
+  static async get(
+    auth: AuthenticatedRequest,
+    request: GetJournalRequest,
+  ): Promise<Pageable<JournalResponse>> {
+    const userId = auth.payload?.id;
+    const getRequest = Validation.validate(JournalValidation.GET, request);
+    const skip = (getRequest.page - 1) * request.size;
+
+    const filters = [];
+
+    if (getRequest.title) {
+      filters.push({
+        OR: [
+          {
+            title: {
+              contains: getRequest.title,
+            },
+          },
+          {
+            content: {
+              contains: getRequest.title,
+            },
+          },
+        ],
+      });
+    }
+
+    const journals = await prismaClient.journal.findMany({
+      where: {
+        userId: userId,
+        AND: filters,
+      },
+      take: getRequest.size,
+      skip: skip,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const total = await prismaClient.journal.count({
+      where: {
+        userId: userId,
+        AND: filters,
+      },
+    });
+
+    return {
+      data: journals.map((journal) => toJournalResponse(journal)),
+      paging: {
+        current_page: getRequest.page,
+        total_page: Math.ceil(total / getRequest.size),
+        total_items: total,
+        size: getRequest.size,
+      },
+    };
   }
 }
