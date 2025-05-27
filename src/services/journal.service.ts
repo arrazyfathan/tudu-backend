@@ -134,6 +134,9 @@ export class JournalService {
         userId: userId,
         AND: filters,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
       take: getRequest.size,
       skip: skip,
       include: {

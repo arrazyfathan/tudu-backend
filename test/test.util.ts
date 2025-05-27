@@ -203,4 +203,27 @@ export class JournalTest {
       },
     });
   }
+
+  static async createMultipleJournal() {
+    const categoryId = "2a6c6c4e-3afc-43b0-b7f9-eb7fa405de58";
+    const tagIds = ["ab49ac8c-385e-4579-b675-0245d7a9a151", "37d2d127-6366-431f-9a17-2ef5890a761a"];
+    const user = await prismaClient.user.findFirstOrThrow({ where: { username: "test" } });
+
+    for (let i = 0; i < 5; i++) {
+      await prismaClient.journal.create({
+        data: {
+          title: `title journal (#${i + 1})`,
+          content: "content journal",
+          date: new Date(),
+          categoryId,
+          userId: user.id,
+          tags: {
+            create: tagIds.map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            })),
+          },
+        },
+      });
+    }
+  }
 }

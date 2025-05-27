@@ -1,4 +1,4 @@
-import { AuthTest } from "./test.util";
+import { AuthTest, JournalTest } from "./test.util";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -102,6 +102,7 @@ describe("GET /api/journals/", () => {
 
   beforeEach(async () => {
     accessToken = await AuthTest.createAccessToken();
+    await JournalTest.createMultipleJournal();
   });
 
   afterEach(async () => {
@@ -116,5 +117,48 @@ describe("GET /api/journals/", () => {
         size: 10,
       })
       .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(5);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(1);
+    expect(response.body.paging.total_items).toBe(5);
+    expect(response.body.paging.size).toBe(10);
+  });
+
+  it("should be able to search journals", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        search: "(#1)",
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(1);
+    expect(response.body.paging.total_items).toBe(1);
+    expect(response.body.paging.size).toBe(10);
+  });
+
+  it("should be able to show empty journals when search not found", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        search: "not found journals",
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(0);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(0);
+    expect(response.body.paging.total_items).toBe(0);
+    expect(response.body.paging.size).toBe(10);
   });
 });
