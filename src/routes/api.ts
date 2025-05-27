@@ -32,3 +32,4 @@ apiRouter.delete("/api/tags/:tagId", TagController.deleteTag);
 // Journal API
 apiRouter.post("/api/journals", JournalController.createJournal);
 apiRouter.get("/api/journals", JournalController.getJournals);
+apiRouter.delete("/api/journals/:journalId", JournalController.deleteJournal);

@@ -17,9 +17,7 @@ export class JournalValidation {
     tagIds: z.array(z.string()).optional(),
   });
 
-  static readonly DELETE = z.object({
-    id: z.string(),
-  });
+  static readonly DELETE = z.string();
 
   static readonly GET: ZodType = z.object({
     title: z.string().min(1).optional(),

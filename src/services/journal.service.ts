@@ -10,6 +10,7 @@ import { JournalValidation } from "../validations/journal.validation";
 import { prismaClient } from "../config/database";
 import { ResponseError } from "../errors/response.error";
 import { Pageable } from "../models/page";
+import { CommonResponse } from "../utils/response";
 
 export class JournalService {
   static async create(
@@ -120,6 +121,12 @@ export class JournalService {
       });
     }
 
+    filters.push({
+      deletedAt: {
+        equals: null,
+      },
+    });
+
     const journals = await prismaClient.journal.findMany({
       where: {
         userId: userId,
@@ -163,5 +170,32 @@ export class JournalService {
         size: getRequest.size,
       },
     };
+  }
+
+  static async delete(auth: AuthenticatedRequest, id: string): Promise<CommonResponse> {
+    const userId = auth.payload?.id;
+    const journalId = Validation.validate(JournalValidation.DELETE, id);
+
+    const journal = await prismaClient.journal.findFirst({
+      where: {
+        id: journalId,
+        userId: userId,
+      },
+    });
+
+    if (!journal) {
+      throw new ResponseError(404, "Journal not found");
+    }
+
+    await prismaClient.journal.update({
+      where: {
+        id: journalId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return { message: "Journal deleted successfully" };
   }
 }

@@ -35,4 +35,17 @@ export class JournalController {
       next(error);
     }
   }
+
+  static async deleteJournal(
+    request: AuthenticatedRequest,
+    response: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await JournalService.delete(request, request.params.journalId);
+      response.status(200).json(successResponse(result.message, null));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
