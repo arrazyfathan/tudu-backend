@@ -17,12 +17,10 @@ export class JournalValidation {
     tagIds: z.array(z.string()).optional(),
   });
 
-  static readonly DELETE = z.object({
-    id: z.string(),
-  });
+  static readonly DELETE = z.string();
 
   static readonly GET: ZodType = z.object({
-    title: z.string().min(1).optional(),
+    title: z.string().optional(),
     page: z.number().min(1).positive(),
     size: z.number().min(1).max(100).positive(),
   });

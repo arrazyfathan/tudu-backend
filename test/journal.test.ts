@@ -1,4 +1,4 @@
-import { AuthTest } from "./test.util";
+import { AuthTest, JournalTest } from "./test.util";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -94,5 +94,106 @@ describe("POST /api/journals/", () => {
 
     expect(response.statusCode).toBe(404);
     expect(response.body.message).toBe("Category not found");
+  });
+});
+
+describe("GET /api/journals/", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await JournalTest.createMultipleJournal();
+  });
+
+  afterEach(async () => {
+    await JournalTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to get all journals", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(5);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(1);
+    expect(response.body.paging.total_items).toBe(5);
+    expect(response.body.paging.size).toBe(10);
+  });
+
+  it("should be able to search journals", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        search: "(#1)",
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(1);
+    expect(response.body.paging.total_items).toBe(1);
+    expect(response.body.paging.size).toBe(10);
+  });
+
+  it("should be able to show empty journals when search not found", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        search: "not found journals",
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data).toHaveLength(0);
+    expect(response.body.paging.current_page).toBe(1);
+    expect(response.body.paging.total_page).toBe(0);
+    expect(response.body.paging.total_items).toBe(0);
+    expect(response.body.paging.size).toBe(10);
+  });
+});
+
+describe("DELETE /api/journal/:journalId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+    await JournalTest.delete();
+  });
+
+  it("should be able to delete journal", async () => {
+    const journal = await JournalTest.create();
+    const journalId = journal.id;
+
+    const response = await supertest(app)
+      .delete(`/api/journals/${journalId}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("Journal deleted successfully");
+  });
+
+  it("should reject delete journal when journalId not found", async () => {
+    const response = await supertest(app)
+      .delete(`/api/journals/not_found_id`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Journal not found");
   });
 });
