@@ -1,6 +1,6 @@
 import { prismaClient } from "../src/config/database";
 import bcrypt from "bcrypt";
-import { Category, RefreshToken, Tag, User } from "../generated/prisma/client";
+import { Category, Journal, RefreshToken, Tag, User } from "../generated/prisma/client";
 import supertest from "supertest";
 import { app } from "../src/app";
 
@@ -183,12 +183,12 @@ export class JournalTest {
     });
   }
 
-  static async create() {
+  static async create(): Promise<Journal> {
     const categoryId = "2a6c6c4e-3afc-43b0-b7f9-eb7fa405de58";
     const tagIds = ["ab49ac8c-385e-4579-b675-0245d7a9a151", "37d2d127-6366-431f-9a17-2ef5890a761a"];
     const user = await prismaClient.user.findFirstOrThrow({ where: { username: "test" } });
 
-    await prismaClient.journal.create({
+    return prismaClient.journal.create({
       data: {
         title: "title journal",
         content: "content journal",

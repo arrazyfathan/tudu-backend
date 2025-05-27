@@ -106,6 +106,7 @@ describe("GET /api/journals/", () => {
   });
 
   afterEach(async () => {
+    await JournalTest.delete();
     await AuthTest.delete();
   });
 
@@ -160,5 +161,39 @@ describe("GET /api/journals/", () => {
     expect(response.body.paging.total_page).toBe(0);
     expect(response.body.paging.total_items).toBe(0);
     expect(response.body.paging.size).toBe(10);
+  });
+});
+
+describe("DELETE /api/journal/:journalId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+    await JournalTest.delete();
+  });
+
+  it("should be able to delete journal", async () => {
+    const journal = await JournalTest.create();
+    const journalId = journal.id;
+
+    const response = await supertest(app)
+      .delete(`/api/journals/${journalId}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("Journal deleted successfully");
+  });
+
+  it("should reject delete journal when journalId not found", async () => {
+    const response = await supertest(app)
+      .delete(`/api/journals/not_found_id`)
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Journal not found");
   });
 });
