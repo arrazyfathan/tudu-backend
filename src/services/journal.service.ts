@@ -110,11 +110,13 @@ export class JournalService {
           {
             title: {
               contains: getRequest.title,
+              mode: "insensitive" as const,
             },
           },
           {
             content: {
               contains: getRequest.title,
+              mode: "insensitive" as const,
             },
           },
         ],

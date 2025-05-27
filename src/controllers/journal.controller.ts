@@ -22,7 +22,7 @@ export class JournalController {
   static async getJournals(request: AuthenticatedRequest, response: Response, next: NextFunction) {
     try {
       const requestGetJournal: GetJournalRequest = {
-        title: request.query.name as string,
+        title: request.query.search as string,
         page: request.query.page ? Number(request.query.page) : 1,
         size: request.query.size ? Number(request.query.size) : 10,
       };

@@ -96,3 +96,25 @@ describe("POST /api/journals/", () => {
     expect(response.body.message).toBe("Category not found");
   });
 });
+
+describe("GET /api/journals/", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+  });
+
+  it("should be able to get all journals", async () => {
+    const response = await supertest(app)
+      .get("/api/journals")
+      .query({
+        page: 1,
+        size: 10,
+      })
+      .set("Authorization", `Bearer ${accessToken}`);
+  });
+});
