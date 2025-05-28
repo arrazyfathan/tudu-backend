@@ -4,6 +4,7 @@ import {
   GetJournalRequest,
   JournalResponse,
   toJournalResponse,
+  UpdateJournalRequest,
 } from "../models/journal.model";
 import { Validation } from "../utils/validation";
 import { JournalValidation } from "../validations/journal.validation";
@@ -175,6 +176,69 @@ export class JournalService {
         size: getRequest.size,
       },
     };
+  }
+
+  static async update(
+    auth: AuthenticatedRequest,
+    request: UpdateJournalRequest,
+    journalId: string,
+  ): Promise<JournalResponse> {
+    const userId = auth.payload?.id;
+    const requestBody = Validation.validate(JournalValidation.UPDATE, request);
+
+    const journal = await prismaClient.journal.findFirst({
+      where: {
+        id: journalId,
+        userId: userId,
+      },
+    });
+
+    if (!journal) {
+      throw new ResponseError(404, "Journal not found");
+    }
+
+    await prismaClient.journalTag.deleteMany({
+      where: {
+        journalId,
+      },
+    });
+
+    const updatedJournal = await prismaClient.journal.update({
+      where: {
+        id: journalId,
+      },
+      data: {
+        title: requestBody.title,
+        content: requestBody.content,
+        date: requestBody.date,
+        categoryId: requestBody.categoryId,
+        tags: {
+          create: requestBody.tagIds.map((tagId) => ({
+            tag: { connect: { id: tagId } },
+          })),
+        },
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return toJournalResponse(updatedJournal);
   }
 
   static async delete(auth: AuthenticatedRequest, id: string): Promise<CommonResponse> {
