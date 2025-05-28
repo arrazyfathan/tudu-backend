@@ -15,59 +15,25 @@ import { CommonResponse } from "../utils/response";
 
 export class JournalService {
   static async create(
-    request: AuthenticatedRequest,
-    requestBody: CreateJournalRequest,
+    auth: AuthenticatedRequest,
+    request: CreateJournalRequest,
   ): Promise<JournalResponse> {
-    const userId = request.payload?.id;
-    const validated = Validation.validate(JournalValidation.CREATE, requestBody);
+    const userId = auth.payload?.id;
+    const requestBody = Validation.validate(JournalValidation.CREATE, request);
 
-    const categoryId =
-      validated.categoryId === "" || validated.categoryId === undefined
-        ? null
-        : validated.categoryId;
-
-    if (categoryId) {
-      const category = await prismaClient.category.findFirst({
-        where: {
-          id: categoryId,
-          OR: [{ userId }, { userId: null }],
-        },
-      });
-
-      if (!category) {
-        throw new ResponseError(404, "Category not found");
-      }
-    }
-
-    const date = validated.date ? new Date(validated.date) : new Date();
-
-    if (isNaN(date.getTime())) {
-      throw new ResponseError(400, "Invalid date format.");
-    }
-
-    const foundTags = await prismaClient.tag.findMany({
-      where: {
-        id: { in: validated.tagIds },
-      },
-      select: { id: true },
-    });
-
-    const foundTagIds = foundTags.map((tag) => tag.id);
-    const missingTags = validated.tagIds.filter((id) => !foundTagIds.includes(id));
-
-    if (missingTags.length > 0) {
-      throw new ResponseError(404, "Tag not found");
-    }
+    const categoryId = await validateAndNormalizeCategoryId(userId, requestBody.categoryId);
+    const date = validateDate(requestBody.date);
+    await validateTagsExist(requestBody.tagIds);
 
     const journal = await prismaClient.journal.create({
       data: {
-        title: validated.title,
-        content: validated.content,
+        title: requestBody.title,
+        content: requestBody.content,
         date,
         categoryId,
         userId: userId!,
         tags: {
-          create: validated.tagIds.map((tagId) => ({
+          create: requestBody.tagIds.map((tagId) => ({
             tag: { connect: { id: tagId } },
           })),
         },
@@ -197,6 +163,12 @@ export class JournalService {
       throw new ResponseError(404, "Journal not found");
     }
 
+    const categoryId = await validateAndNormalizeCategoryId(userId, requestBody.categoryId);
+
+    const date = validateDate(requestBody.date);
+
+    await validateTagsExist(requestBody.tagIds);
+
     await prismaClient.journalTag.deleteMany({
       where: {
         journalId,
@@ -210,8 +182,8 @@ export class JournalService {
       data: {
         title: requestBody.title,
         content: requestBody.content,
-        date: requestBody.date,
-        categoryId: requestBody.categoryId,
+        date,
+        categoryId,
         tags: {
           create: requestBody.tagIds.map((tagId) => ({
             tag: { connect: { id: tagId } },
@@ -266,5 +238,74 @@ export class JournalService {
     });
 
     return { message: "Journal deleted successfully" };
+  }
+
+  static async multipleDelete(auth: AuthenticatedRequest, ids: string[]): Promise<CommonResponse> {
+    const userId = auth.payload?.id;
+    const journalIds = Validation.validate(JournalValidation.MULTIPLE_DELETE, ids);
+
+    const result = await prismaClient.journal.updateMany({
+      where: {
+        id: { in: journalIds },
+        userId: userId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    if (result.count === 0) {
+      throw new ResponseError(404, "No matching journals found");
+    }
+
+    return { message: "Journal deleted successfully" };
+  }
+}
+
+async function validateAndNormalizeCategoryId(
+  userId: string | undefined,
+  categoryId: string | undefined | "" | null,
+): Promise<string | null> {
+  const normalizedCategoryId = categoryId === "" || categoryId === undefined ? null : categoryId;
+
+  if (normalizedCategoryId) {
+    const category = await prismaClient.category.findFirst({
+      where: {
+        id: normalizedCategoryId,
+        OR: [{ userId }, { userId: null }],
+      },
+    });
+
+    if (!category) {
+      throw new ResponseError(404, "Category not found");
+    }
+  }
+
+  return normalizedCategoryId;
+}
+
+function validateDate(dateString: string | undefined): Date {
+  const date = dateString ? new Date(dateString) : new Date();
+
+  if (isNaN(date.getTime())) {
+    throw new ResponseError(400, "Invalid date format.");
+  }
+
+  return date;
+}
+
+async function validateTagsExist(tagIds: string[]): Promise<void> {
+  const foundTags = await prismaClient.tag.findMany({
+    where: {
+      id: { in: tagIds },
+    },
+    select: { id: true },
+  });
+
+  const foundTagIds = foundTags.map((tag) => tag.id);
+  const missingTags = tagIds.filter((id) => !foundTagIds.includes(id));
+
+  if (missingTags.length > 0) {
+    throw new ResponseError(404, "Tag not found");
   }
 }

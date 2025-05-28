@@ -34,3 +34,4 @@ apiRouter.post("/api/journals", JournalController.createJournal);
 apiRouter.get("/api/journals", JournalController.getJournals);
 apiRouter.put("/api/journals/:journalId", JournalController.updateJournal);
 apiRouter.delete("/api/journals/:journalId", JournalController.deleteJournal);
+apiRouter.delete("/api/journals", JournalController.multipleDelete);

@@ -19,6 +19,8 @@ export class JournalValidation {
 
   static readonly DELETE = z.string();
 
+  static readonly MULTIPLE_DELETE = z.array(z.string());
+
   static readonly GET: ZodType = z.object({
     title: z.string().optional(),
     page: z.number().min(1).positive(),

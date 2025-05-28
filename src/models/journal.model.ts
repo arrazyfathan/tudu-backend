@@ -33,8 +33,8 @@ export type UpdateJournalRequest = {
   tagIds: string[];
 };
 
-export type DeleteJournalRequest = {
-  id: string;
+export type MultipleDeleteJournalRequest = {
+  ids: string[];
 };
 
 export type GetJournalRequest = {
