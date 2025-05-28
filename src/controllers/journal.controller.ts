@@ -5,6 +5,7 @@ import { NextFunction, Response } from "express";
 import {
   CreateJournalRequest,
   GetJournalRequest,
+  MultipleDeleteJournalRequest,
   UpdateJournalRequest,
 } from "../models/journal.model";
 
@@ -62,6 +63,20 @@ export class JournalController {
   ) {
     try {
       const result = await JournalService.delete(request, request.params.journalId);
+      response.status(200).json(successResponse(result.message, null));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async multipleDelete(
+    request: AuthenticatedRequest,
+    response: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const journalId = request.body as MultipleDeleteJournalRequest;
+      const result = await JournalService.multipleDelete(request, journalId.ids);
       response.status(200).json(successResponse(result.message, null));
     } catch (error) {
       next(error);

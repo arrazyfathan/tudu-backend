@@ -267,4 +267,25 @@ export class JournalService {
 
     return { message: "Journal deleted successfully" };
   }
+
+  static async multipleDelete(auth: AuthenticatedRequest, ids: string[]): Promise<CommonResponse> {
+    const userId = auth.payload?.id;
+    const journalIds = Validation.validate(JournalValidation.MULTIPLE_DELETE, ids);
+
+    const result = await prismaClient.journal.updateMany({
+      where: {
+        id: { in: journalIds },
+        userId: userId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    if (result.count === 0) {
+      throw new ResponseError(404, "No matching journals found");
+    }
+
+    return { message: "Journal deleted successfully" };
+  }
 }
