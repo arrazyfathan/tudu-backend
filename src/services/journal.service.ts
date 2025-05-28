@@ -21,43 +21,9 @@ export class JournalService {
     const userId = auth.payload?.id;
     const requestBody = Validation.validate(JournalValidation.CREATE, request);
 
-    const categoryId =
-      requestBody.categoryId === "" || requestBody.categoryId === undefined
-        ? null
-        : requestBody.categoryId;
-
-    if (categoryId) {
-      const category = await prismaClient.category.findFirst({
-        where: {
-          id: categoryId,
-          OR: [{ userId }, { userId: null }],
-        },
-      });
-
-      if (!category) {
-        throw new ResponseError(404, "Category not found");
-      }
-    }
-
-    const date = requestBody.date ? new Date(requestBody.date) : new Date();
-
-    if (isNaN(date.getTime())) {
-      throw new ResponseError(400, "Invalid date format.");
-    }
-
-    const foundTags = await prismaClient.tag.findMany({
-      where: {
-        id: { in: requestBody.tagIds },
-      },
-      select: { id: true },
-    });
-
-    const foundTagIds = foundTags.map((tag) => tag.id);
-    const missingTags = requestBody.tagIds.filter((id) => !foundTagIds.includes(id));
-
-    if (missingTags.length > 0) {
-      throw new ResponseError(404, "Tag not found");
-    }
+    const categoryId = await validateAndNormalizeCategoryId(userId, requestBody.categoryId);
+    const date = validateDate(requestBody.date);
+    await validateTagsExist(requestBody.tagIds);
 
     const journal = await prismaClient.journal.create({
       data: {
@@ -197,6 +163,12 @@ export class JournalService {
       throw new ResponseError(404, "Journal not found");
     }
 
+    const categoryId = await validateAndNormalizeCategoryId(userId, requestBody.categoryId);
+
+    const date = validateDate(requestBody.date);
+
+    await validateTagsExist(requestBody.tagIds);
+
     await prismaClient.journalTag.deleteMany({
       where: {
         journalId,
@@ -210,8 +182,8 @@ export class JournalService {
       data: {
         title: requestBody.title,
         content: requestBody.content,
-        date: requestBody.date,
-        categoryId: requestBody.categoryId,
+        date,
+        categoryId,
         tags: {
           create: requestBody.tagIds.map((tagId) => ({
             tag: { connect: { id: tagId } },
@@ -287,5 +259,53 @@ export class JournalService {
     }
 
     return { message: "Journal deleted successfully" };
+  }
+}
+
+async function validateAndNormalizeCategoryId(
+  userId: string | undefined,
+  categoryId: string | undefined | "" | null,
+): Promise<string | null> {
+  const normalizedCategoryId = categoryId === "" || categoryId === undefined ? null : categoryId;
+
+  if (normalizedCategoryId) {
+    const category = await prismaClient.category.findFirst({
+      where: {
+        id: normalizedCategoryId,
+        OR: [{ userId }, { userId: null }],
+      },
+    });
+
+    if (!category) {
+      throw new ResponseError(404, "Category not found");
+    }
+  }
+
+  return normalizedCategoryId;
+}
+
+function validateDate(dateString: string | undefined): Date {
+  const date = dateString ? new Date(dateString) : new Date();
+
+  if (isNaN(date.getTime())) {
+    throw new ResponseError(400, "Invalid date format.");
+  }
+
+  return date;
+}
+
+async function validateTagsExist(tagIds: string[]): Promise<void> {
+  const foundTags = await prismaClient.tag.findMany({
+    where: {
+      id: { in: tagIds },
+    },
+    select: { id: true },
+  });
+
+  const foundTagIds = foundTags.map((tag) => tag.id);
+  const missingTags = tagIds.filter((id) => !foundTagIds.includes(id));
+
+  if (missingTags.length > 0) {
+    throw new ResponseError(404, "Tag not found");
   }
 }

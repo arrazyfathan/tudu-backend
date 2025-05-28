@@ -197,3 +197,185 @@ describe("DELETE /api/journal/:journalId", () => {
     expect(response.body.message).toBe("Journal not found");
   });
 });
+
+describe("UPDATE /api/journals:journalId", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+    await JournalTest.delete();
+  });
+
+  it("should be able to update the journal", async () => {
+    const journal = await JournalTest.create();
+
+    const response = await supertest(app)
+      .put(`/api/journals/${journal.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "My Journal on 28 May",
+        content: "Updated Journal 28 May Hehehe",
+        date: "2025-05-28T08:00:00.000Z",
+        categoryId: "2a6c6c4e-3afc-43b0-b7f9-eb7fa405de58",
+        tagIds: ["ab49ac8c-385e-4579-b675-0245d7a9a151"],
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.data.title).toBe("My Journal on 28 May");
+    expect(response.body.data.content).toBe("Updated Journal 28 May Hehehe");
+    expect(response.body.data.date).toBe("2025-05-28T08:00:00.000Z");
+    expect(response.body.data.category.id).toBe("2a6c6c4e-3afc-43b0-b7f9-eb7fa405de58");
+    expect(response.body.data.tags).toHaveLength(1);
+  });
+
+  it("should reject update journal when journalId not found", async () => {
+    const response = await supertest(app)
+      .put(`/api/journals/notfound`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "My Journal on 28 May",
+        content: "Updated Journal 28 May Hehehe",
+        date: "2025-05-28T08:00:00.000Z",
+        category: "2025-05-28T08:00:00.000Z",
+        tagIds: ["ab49ac8c-385e-4579-b675-0245d7a9a151"],
+      });
+
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should reject update journal when tag is not found", async () => {
+    const journal = await JournalTest.create();
+
+    const response = await supertest(app)
+      .put(`/api/journals/${journal.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "My Journal with Invalid Tag",
+        content: "Trying to update with invalid tag",
+        date: "2025-05-28T08:00:00.000Z",
+        tagIds: ["non-existent-tag-id"],
+      });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Tag not found");
+  });
+
+  it("should reject update journal when category is not found", async () => {
+    const journal = await JournalTest.create();
+
+    const response = await supertest(app)
+      .put(`/api/journals/${journal.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "My Journal with Invalid Category",
+        content: "Trying to update with invalid category",
+        date: "2025-05-28T08:00:00.000Z",
+        categoryId: "non-existent-category-id",
+        tagIds: ["ab49ac8c-385e-4579-b675-0245d7a9a151"],
+      });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("Category not found");
+  });
+
+  it("should reject update journal when date format is invalid", async () => {
+    const journal = await JournalTest.create();
+
+    const response = await supertest(app)
+      .put(`/api/journals/${journal.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "Journal with Invalid Date",
+        content: "Trying to update with invalid date",
+        date: "invalid-date",
+        categoryId: journal.categoryId,
+        tagIds: ["ab49ac8c-385e-4579-b675-0245d7a9a151"],
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.message).toBe("Invalid date format.");
+  });
+});
+
+describe("MULTIPLE DELETE /api/journals/", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+    await JournalTest.createMultipleJournal();
+  });
+
+  afterEach(async () => {
+    await JournalTest.delete();
+    await AuthTest.delete();
+  });
+
+  it("should be able to delete multiple journals", async () => {
+    const journals = await JournalTest.getJournals();
+    const wantToDelete = [journals[0].id, journals[1].id];
+
+    const response = await supertest(app)
+      .delete("/api/journals")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        ids: wantToDelete,
+      });
+
+    const journalAfterDeleted = await JournalTest.getJournals();
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("Journal deleted successfully");
+    wantToDelete.forEach((deletedId) => {
+      expect(journalAfterDeleted.find((j) => j.id === deletedId)).toBeUndefined();
+    });
+  });
+
+  it("should be able to delete when some journal IDs are invalid", async () => {
+    const journals = await JournalTest.getJournals();
+    const wantToDelete = [journals[0].id, "non-existent-id"];
+
+    const response = await supertest(app)
+      .delete("/api/journals")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        ids: wantToDelete,
+      });
+
+    const journalAfterDeleted = await JournalTest.getJournals();
+
+    expect(response.statusCode).toBe(200);
+    wantToDelete.forEach((deletedId) => {
+      const journal = journalAfterDeleted.find((j) => j.id === deletedId);
+      if (journal) {
+        expect(journal.deletedAt).not.toBeNull();
+      }
+    });
+  });
+
+  it("should reject deletion when not authorized", async () => {
+    const journals = await JournalTest.getJournals();
+    const wantToDelete = [journals[0].id];
+
+    const response = await supertest(app)
+      .delete("/api/journals")
+      .set("Authorization", `Bearer invalid`)
+      .send({
+        ids: wantToDelete,
+      });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("should reject deletion when no IDs are provided", async () => {
+    const response = await supertest(app)
+      .delete("/api/journals")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({});
+
+    expect(response.statusCode).toBe(400);
+  });
+});

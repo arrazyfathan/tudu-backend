@@ -185,7 +185,7 @@ export class JournalTest {
 
   static async create(): Promise<Journal> {
     const categoryId = "2a6c6c4e-3afc-43b0-b7f9-eb7fa405de58";
-    const tagIds = ["ab49ac8c-385e-4579-b675-0245d7a9a151", "37d2d127-6366-431f-9a17-2ef5890a761a"];
+    const tagIds = ["ab49ac8c-385e-4579-b675-0245d7a9a151"];
     const user = await prismaClient.user.findFirstOrThrow({ where: { username: "test" } });
 
     return prismaClient.journal.create({
@@ -225,5 +225,16 @@ export class JournalTest {
         },
       });
     }
+  }
+
+  static async getJournals() {
+    return prismaClient.journal.findMany({
+      where: {
+        deletedAt: null,
+        user: {
+          username: "test",
+        },
+      },
+    });
   }
 }
