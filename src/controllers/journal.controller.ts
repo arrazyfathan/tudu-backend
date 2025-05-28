@@ -2,7 +2,11 @@ import { successResponse, successResponsePaging } from "../utils/response";
 import { JournalService } from "../services/journal.service";
 import { AuthenticatedRequest } from "../types/user.request";
 import { NextFunction, Response } from "express";
-import { CreateJournalRequest, GetJournalRequest } from "../models/journal.model";
+import {
+  CreateJournalRequest,
+  GetJournalRequest,
+  UpdateJournalRequest,
+} from "../models/journal.model";
 
 export class JournalController {
   static async createJournal(
@@ -31,6 +35,21 @@ export class JournalController {
       response
         .status(200)
         .json(successResponsePaging("Journals fetched successfully", result.data, result.paging));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateJournal(
+    request: AuthenticatedRequest,
+    response: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const journalId = request.params.journalId;
+      const requestBody = request.body as UpdateJournalRequest;
+      const result = await JournalService.update(request, requestBody, journalId);
+      response.status(200).json(successResponse("Journal updated successfully", result));
     } catch (error) {
       next(error);
     }

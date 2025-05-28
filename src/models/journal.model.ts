@@ -30,7 +30,7 @@ export type UpdateJournalRequest = {
   content?: string;
   date?: string;
   categoryId?: string | null;
-  tagIds?: string[];
+  tagIds: string[];
 };
 
 export type DeleteJournalRequest = {
