@@ -15,16 +15,16 @@ import { CommonResponse } from "../utils/response";
 
 export class JournalService {
   static async create(
-    request: AuthenticatedRequest,
-    requestBody: CreateJournalRequest,
+    auth: AuthenticatedRequest,
+    request: CreateJournalRequest,
   ): Promise<JournalResponse> {
-    const userId = request.payload?.id;
-    const validated = Validation.validate(JournalValidation.CREATE, requestBody);
+    const userId = auth.payload?.id;
+    const requestBody = Validation.validate(JournalValidation.CREATE, request);
 
     const categoryId =
-      validated.categoryId === "" || validated.categoryId === undefined
+      requestBody.categoryId === "" || requestBody.categoryId === undefined
         ? null
-        : validated.categoryId;
+        : requestBody.categoryId;
 
     if (categoryId) {
       const category = await prismaClient.category.findFirst({
@@ -39,7 +39,7 @@ export class JournalService {
       }
     }
 
-    const date = validated.date ? new Date(validated.date) : new Date();
+    const date = requestBody.date ? new Date(requestBody.date) : new Date();
 
     if (isNaN(date.getTime())) {
       throw new ResponseError(400, "Invalid date format.");
@@ -47,13 +47,13 @@ export class JournalService {
 
     const foundTags = await prismaClient.tag.findMany({
       where: {
-        id: { in: validated.tagIds },
+        id: { in: requestBody.tagIds },
       },
       select: { id: true },
     });
 
     const foundTagIds = foundTags.map((tag) => tag.id);
-    const missingTags = validated.tagIds.filter((id) => !foundTagIds.includes(id));
+    const missingTags = requestBody.tagIds.filter((id) => !foundTagIds.includes(id));
 
     if (missingTags.length > 0) {
       throw new ResponseError(404, "Tag not found");
@@ -61,13 +61,13 @@ export class JournalService {
 
     const journal = await prismaClient.journal.create({
       data: {
-        title: validated.title,
-        content: validated.content,
+        title: requestBody.title,
+        content: requestBody.content,
         date,
         categoryId,
         userId: userId!,
         tags: {
-          create: validated.tagIds.map((tagId) => ({
+          create: requestBody.tagIds.map((tagId) => ({
             tag: { connect: { id: tagId } },
           })),
         },
