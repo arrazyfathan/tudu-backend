@@ -50,6 +50,14 @@ describe("POST /api/auth/register", () => {
 });
 
 describe("POST /api/auth/login", () => {
+  beforeEach(async () => {
+    await AuthTest.create();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+  });
+
   it("should reject login when username or password invalid", async () => {
     const response = await supertest(app).post("/api/auth/login").send({
       username: "",
@@ -61,11 +69,18 @@ describe("POST /api/auth/login", () => {
     expect(response.body.message).toBe("Validation failed");
   });
 
-  it("should can login and generate token", async () => {
+  it("should login successfully and return access and refresh token", async () => {
     const response = await supertest(app).post("/api/auth/login").send({
-      username: "razy",
+      username: "test",
       password: "secret",
     });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("User login successfully");
+    expect(response.body.data).toBeDefined();
+    expect(response.body.data.token).toBeDefined();
+    expect(response.body.data.token.access_token).toBeDefined();
+    expect(response.body.data.token.refresh_token).toBeDefined();
   });
 });
 
