@@ -29,6 +29,12 @@ describe("GET /api/tags", () => {
     expect(response.statusCode).toBe(401);
     expect(response.body.status).toBe("error");
   });
+
+  it("should reject get tags when token not provided", async () => {
+    const response = await supertest(app).get("/api/tags");
+    expect(response.statusCode).toBe(403);
+    expect(response.body.status).toBe("error");
+  });
 });
 
 describe("POST /api/tags", () => {
@@ -87,6 +93,12 @@ describe("POST /api/tags", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("Required");
   });
+
+  it("should reject add tag when token is not provided", async () => {
+    const response = await supertest(app).post("/api/tags").send({ name: "unauthorized" });
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
 });
 
 describe("PATCH /api/tags/:tagId", () => {
@@ -141,6 +153,16 @@ describe("PATCH /api/tags/:tagId", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("Tags cannot contain spaces");
   });
+
+  it("should reject update tag when token is not provided", async () => {
+    const tag = await TagTest.get();
+    const response = await supertest(app)
+      .patch(`/api/tags/${tag.id}`)
+      .send({ name: "unauthorized" });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
 });
 
 describe("DELETE /api/tags/:tagId", () => {
@@ -183,5 +205,12 @@ describe("DELETE /api/tags/:tagId", () => {
 
     expect(response.statusCode).toBe(403);
     expect(response.body.message).toBe("You are not allowed to delete this tag.");
+  });
+
+  it("should reject delete tag when token is not provided", async () => {
+    const tag = await TagTest.get();
+    const response = await supertest(app).delete(`/api/tags/${tag.id}`);
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
   });
 });
