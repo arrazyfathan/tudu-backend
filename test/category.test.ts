@@ -53,6 +53,15 @@ describe("POST api/categories", () => {
       });
   });
 
+  it("should reject create category when no token provided", async () => {
+    const response = await supertest(app).post("/api/categories").send({
+      name: "Unauthorized category",
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
+
   it("should reject add category when category is exist", async () => {
     const response = await supertest(app)
       .post("/api/categories")
@@ -139,6 +148,19 @@ describe("PATCH /api/categories/:categoryId", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.body.errors.name).toBe("String must contain at least 1 character(s)");
+  });
+
+  it("should reject update when trying to modify global category", async () => {
+    const globalCategory = await CategoryTest.getGlobalsCategory();
+    const response = await supertest(app)
+      .patch(`/api/categories/${globalCategory.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "new name",
+      });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("You are not allowed to update this category.");
   });
 });
 
