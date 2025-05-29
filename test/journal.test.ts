@@ -171,6 +171,23 @@ describe("DELETE /api/journal/:journalId", () => {
     accessToken = await AuthTest.createAccessToken();
   });
 
+  it("should reject update journal when not authorized", async () => {
+    const journal = await JournalTest.create();
+
+    const response = await supertest(app)
+      .put(`/api/journals/${journal.id}`)
+      .set("Authorization", `Bearer invalid-token`)
+      .send({
+        title: "Unauthorized Update",
+        content: "Trying to update without proper token",
+        date: "2025-05-28T08:00:00.000Z",
+        categoryId: journal.categoryId,
+        tagIds: ["ab49ac8c-385e-4579-b675-0245d7a9a151"],
+      });
+
+    expect(response.statusCode).toBe(401);
+  });
+
   afterEach(async () => {
     await AuthTest.delete();
     await JournalTest.delete();
@@ -375,6 +392,17 @@ describe("MULTIPLE DELETE /api/journals/", () => {
       .delete("/api/journals")
       .set("Authorization", `Bearer ${accessToken}`)
       .send({});
+
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should reject deletion when body is not an array of ids", async () => {
+    const response = await supertest(app)
+      .delete("/api/journals")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        ids: "invalid-format",
+      });
 
     expect(response.statusCode).toBe(400);
   });
