@@ -22,6 +22,12 @@ describe("GET /api/user", () => {
     expect(user.body.data.email).toBe("test");
     expect(user.body.data.username).toBe("test");
   });
+
+  it("should reject get current user when no token is provided", async () => {
+    const response = await supertest(app).get("/api/user");
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
 });
 
 describe("PATCH /api/user", () => {
@@ -92,6 +98,12 @@ describe("PATCH /api/user", () => {
 
     expect(response.statusCode).toBe(200);
   });
+
+  it("should reject update when token is not provided", async () => {
+    const response = await supertest(app).patch("/api/user").send({ name: "no-auth" });
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
 });
 
 describe("DElETE /api/user", () => {
@@ -123,5 +135,11 @@ describe("DElETE /api/user", () => {
     expect(response.statusCode).toBe(200);
     expect(user.deletedAt).not.toBeNull();
     expect(refreshTokens.length).toBe(0);
+  });
+
+  it("should reject delete user when token is not provided", async () => {
+    const response = await supertest(app).delete("/api/user");
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
   });
 });
