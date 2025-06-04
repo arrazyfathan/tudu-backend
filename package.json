@@ -51,6 +51,8 @@
     "@prisma/client": "^6.8.2",
     "bcrypt": "^5.1.1",
     "express": "^5.1.0",
+    "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
