@@ -1,5 +1,10 @@
 import { AuthenticatedRequest } from "../types/user.request";
-import { toUserResponse, UpdateUserRequest, UserResponse } from "../models/user.model";
+import {
+  toUserResponse,
+  UpdateFcmTokenRequest,
+  UpdateUserRequest,
+  UserResponse,
+} from "../models/user.model";
 import { prismaClient } from "../config/database";
 import { ResponseError } from "../errors/response.error";
 import { Validation } from "../utils/validation";
@@ -84,5 +89,24 @@ export class UserService {
     });
 
     return "User deleted successfully";
+  }
+
+  static async storeFcmToken(
+    auth: AuthenticatedRequest,
+    request: UpdateFcmTokenRequest,
+  ): Promise<string> {
+    const userId = auth.payload?.id;
+    const requestBody = Validation.validate(UserValidation.STORE_FCM, request);
+
+    await prismaClient.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        fcmToken: requestBody.fcmToken,
+      },
+    });
+
+    return "FCM Token stored successfully";
   }
 }

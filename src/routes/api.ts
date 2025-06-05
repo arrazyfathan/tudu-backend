@@ -16,6 +16,7 @@ apiRouter.post("/api/auth/logout", AuthController.logout);
 apiRouter.get("/api/user", UserController.getCurrentUser);
 apiRouter.patch("/api/user", UserController.update);
 apiRouter.delete("/api/user", UserController.delete);
+apiRouter.put("/api/user/fcm-token", UserController.storeFcmToken);
 
 // Categories API
 apiRouter.get("/api/categories", CategoryController.getCategories);
