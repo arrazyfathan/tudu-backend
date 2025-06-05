@@ -13,6 +13,10 @@ export type UpdateUserRequest = {
   password?: string;
 };
 
+export type UpdateFcmTokenRequest = {
+  fcmToken: string;
+};
+
 export function toUserResponse(
   user: Pick<User, "id" | "username" | "name" | "email">,
 ): UserResponse {

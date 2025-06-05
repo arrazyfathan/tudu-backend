@@ -18,4 +18,8 @@ export class UserValidation {
     name: z.string().min(1).max(100).optional(),
     email: z.string().email().optional(),
   });
+
+  static readonly STORE_FCM: ZodType = z.object({
+    fcmToken: z.string().min(1),
+  });
 }
