@@ -15,6 +15,7 @@ model User {
   name          String
   email         String         @unique
   password      String
+  fcmToken      String?
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
