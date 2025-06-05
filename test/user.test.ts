@@ -143,3 +143,62 @@ describe("DElETE /api/user", () => {
     expect(response.body.message).toBe("Missing or invalid authorization token");
   });
 });
+
+describe("PUT /api/user/fcm-token", () => {
+  let accessToken: string | null = null;
+
+  beforeEach(async () => {
+    accessToken = await AuthTest.createAccessToken();
+  });
+
+  afterEach(async () => {
+    await AuthTest.delete();
+  });
+
+
+  it("should update fcm token successfully", async () => {
+    const response = await supertest(app)
+      .put("/api/user/fcm-token")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        fcmToken: "new_valid_fcm_token",
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.status).toBe("success");
+    expect(response.body.message).toBe("FCM Token stored successfully");
+  });
+
+  it("should reject when no token is provided", async () => {
+    const response = await supertest(app)
+      .put("/api/user/fcm-token")
+      .send({
+        fcmToken: "some_token",
+      });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body.message).toBe("Missing or invalid authorization token");
+  });
+
+  it("should reject when fcmToken is missing", async () => {
+    const response = await supertest(app)
+      .put("/api/user/fcm-token")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({});
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors.fcmToken).toBe("Required");
+  });
+
+  it("should reject when fcmToken is empty", async () => {
+    const response = await supertest(app)
+      .put("/api/user/fcm-token")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        fcmToken: "",
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors.fcmToken).toBe("FCM token must be a non-empty string");
+  });
+})

@@ -20,6 +20,6 @@ export class UserValidation {
   });
 
   static readonly STORE_FCM: ZodType = z.object({
-    fcmToken: z.string().min(1),
+    fcmToken: z.string().min(1, { message: "FCM token must be a non-empty string" }),
   });
 }
