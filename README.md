@@ -39,17 +39,20 @@ Tudu Backend is a RESTful API that provides a comprehensive solution for managin
 ### Steps
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/arrazyfathan/tudu-backend.git
    cd tudu-backend
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Set up environment variables:
+
    - Copy the `.env.sample` file to `.env`
    - Fill in the required values:
      ```
@@ -59,11 +62,13 @@ Tudu Backend is a RESTful API that provides a comprehensive solution for managin
      ```
 
 4. Set up the database:
+
    ```bash
    npx prisma migrate dev
    ```
 
 5. Generate Prisma client:
+
    ```bash
    npx prisma generate
    ```
@@ -78,11 +83,13 @@ Tudu Backend is a RESTful API that provides a comprehensive solution for managin
 ### Starting the Server
 
 #### Development Mode
+
 ```bash
 npm run dev
 ```
 
 #### Production Mode
+
 ```bash
 npm run build
 npm start
@@ -91,30 +98,35 @@ npm start
 ### API Endpoints
 
 #### Authentication
+
 - `POST /api/auth/register` - Register a new user
 - `POST /api/auth/login` - Login
 - `POST /api/auth/refresh_token` - Refresh access token
 - `POST /api/auth/logout` - Logout (requires authentication)
 
 #### User Management
+
 - `GET /api/user` - Get current user profile
 - `PATCH /api/user` - Update user profile
 - `DELETE /api/user` - Delete user account
 - `POST /api/user/fcm-token` - Store FCM token for notifications
 
 #### Categories
+
 - `GET /api/categories` - Get all categories
 - `POST /api/categories` - Create a new category
 - `PATCH /api/categories/:categoryId` - Update a category
 - `DELETE /api/categories/:categoryId` - Delete a category
 
 #### Tags
+
 - `GET /api/tags` - Get all tags
 - `POST /api/tags` - Create a new tag
 - `PATCH /api/tags/:tagId` - Update a tag
 - `DELETE /api/tags/:tagId` - Delete a tag
 
 #### Journals
+
 - `GET /api/journals` - Get all journals
 - `POST /api/journals` - Create a new journal
 - `PUT /api/journals/:journalId` - Update a journal
@@ -122,6 +134,7 @@ npm start
 - `DELETE /api/journals` - Delete multiple journals
 
 #### Notifications
+
 - `POST /api/notification/send-notification` - Send a notification
 
 ## Project Structure
