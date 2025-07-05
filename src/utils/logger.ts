@@ -59,7 +59,7 @@ const transports = [
     level: "error",
   }),
   new winston.transports.Console({
-    level: "error",
+    level: "debug",
   }),
 ];
 
