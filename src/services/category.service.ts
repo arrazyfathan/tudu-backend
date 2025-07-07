@@ -11,18 +11,12 @@ import { capitalizeFirstLetter } from "../utils/string.utils";
 import { Validation } from "../utils/validation";
 import { CategoryValidation } from "../validations/category.validation";
 import { CommonResponse } from "../utils/response";
-import { redis } from "../config/redis.config";
 
 export class CategoryService {
   static async get(request: AuthenticatedRequest): Promise<CategoryResponse[]> {
     const userId = request.payload?.id;
 
-    const cacheKey = `categories:${userId}`;
-    const cachedCategories = await redis.get(cacheKey);
-
-    if (cachedCategories) return JSON.parse(cachedCategories);
-
-    const categories = await prismaClient.category.findMany({
+    return prismaClient.category.findMany({
       where: {
         OR: [{ userId: userId }, { userId: null }],
       },
@@ -35,9 +29,6 @@ export class CategoryService {
         name: "asc",
       },
     });
-
-    await redis.setex(cacheKey, 60 * 60, JSON.stringify(categories));
-    return categories;
   }
 
   static async create(
