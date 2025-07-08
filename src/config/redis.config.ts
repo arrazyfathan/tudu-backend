@@ -2,14 +2,14 @@ import Redis from "ioredis";
 import logger from "../utils/logger";
 
 export const redis = new Redis({
-  host: "localhost",
-  port: 6379,
-  db: 0,
+  host: process.env.REDIS_HOST || "localhost",
+  port: Number(process.env.REDIS_PORT) || 6379,
+  db: Number(process.env.REDIS_DB) || 0,
   socketTimeout: 10000,
-  maxRetriesPerRequest: 0, // avoid retry flood
+  maxRetriesPerRequest: 0,
   retryStrategy: (times) => {
-    if (times >= 3) return null; // stop retrying after 3 attempts
-    return Math.min(times * 100, 3000); // exponential backoff up to 3s
+    if (times >= 3) return null;
+    return Math.min(times * 100, 3000);
   },
 });
 
