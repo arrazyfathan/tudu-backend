@@ -3,6 +3,17 @@ import { redis } from "../config/redis.config";
 import logger from "../utils/logger";
 import { AuthenticatedRequest } from "../types/user.request";
 
+// Redis caching middleware temporarily disabled
+export const cacheMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  // Simply pass through without caching
+  next();
+};
+
+/* Original Redis caching middleware:
 export const cacheMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -32,3 +43,4 @@ export const cacheMiddleware = async (
     next();
   }
 };
+*/

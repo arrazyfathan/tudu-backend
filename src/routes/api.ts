@@ -20,13 +20,15 @@ apiRouter.delete("/api/user", UserController.delete);
 apiRouter.post("/api/user/fcm-token", UserController.storeFcmToken);
 
 // Categories API
-apiRouter.get("/api/categories", cacheMiddleware, CategoryController.getCategories);
+// Redis caching temporarily disabled
+apiRouter.get("/api/categories", CategoryController.getCategories);
 apiRouter.post("/api/categories", CategoryController.createCategory);
 apiRouter.patch("/api/categories/:categoryId", CategoryController.updateCategory);
 apiRouter.delete("/api/categories/:categoryId", CategoryController.deleteCategory);
 
 // Tag API
-apiRouter.get("/api/tags", cacheMiddleware, TagController.getTags);
+// Redis caching temporarily disabled
+apiRouter.get("/api/tags", TagController.getTags);
 apiRouter.post("/api/tags", TagController.createTag);
 apiRouter.patch("/api/tags/:tagId", TagController.updateTag);
 apiRouter.delete("/api/tags/:tagId", TagController.deleteTag);
