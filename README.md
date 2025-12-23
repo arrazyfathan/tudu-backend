@@ -1,200 +1,353 @@
 # Tudu Backend
 
-A robust backend API for a journal management system built with TypeScript, Express, and Prisma.
+Backend API for a journal management system. Built with TypeScript, Express, Prisma, PostgreSQL, and Firebase Cloud Messaging (FCM) for push notifications.
 
-## Description
+## Table of Contents
 
-Tudu Backend is a RESTful API that provides a comprehensive solution for managing journals, categories, and tags. It features user authentication, authorization, and push notification capabilities.
+- Overview
+- Features
+- Tech Stack
+- Architecture Notes
+- Getting Started
+- Environment Variables
+- Database and Prisma
+- Firebase (Push Notifications)
+- API Documentation
+- Response Format and Errors
+- Scripts
+- Project Structure
+- Contributing
+- License
 
-## Main Features
+## Overview
 
-- **User Authentication**: Register, login, logout, and token refresh functionality
-- **Journal Management**: Create, read, update, and delete journals
-- **Category Management**: Organize journals with customizable categories
-- **Tag Management**: Add tags to journals for better organization and searchability
-- **Push Notifications**: Firebase Cloud Messaging (FCM) integration for real-time notifications
+Tudu Backend is a REST API that manages users, journals, categories, tags, and device tokens. It provides JWT-based authentication with refresh tokens stored in the database.
+
+## Features
+
+- User registration, login, logout, and refresh token rotation
+- Journal CRUD with pagination and search
+- Category and tag management (global defaults + user-specific)
+- Firebase Cloud Messaging support for push notifications
+- Validation with Zod and centralized error handling
+- Structured logging with Winston
 
 ## Tech Stack
 
-- **Language**: TypeScript
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: JWT (JSON Web Tokens)
-- **Validation**: Zod
-- **Logging**: Winston
-- **Testing**: Jest
-- **Containerization**: Docker
-- **Push Notifications**: Firebase Admin SDK
+- Node.js + TypeScript
+- Express 5
+- PostgreSQL + Prisma (driver adapter for pg)
+- JWT for auth (access + refresh token)
+- Zod validation
+- Jest for testing
+- Winston logging
 
-## Installation Guide
+## Architecture Notes
+
+- Auth is required for all `/api/*` routes except register/login/refresh and send-notification.
+- Refresh tokens are hashed and stored in the database with a 30-day expiry.
+- Journals support soft delete via `deletedAt`.
+- Categories and tags support global (userId null) and user-specific entries.
+- Redis is currently disabled in `src/config/redis.config.ts`; the code uses a no-op client.
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js 18+
 - PostgreSQL
-- Firebase project (for push notifications)
+- (Optional) Firebase project for notifications
 
-### Steps
+### Install
 
-1. Clone the repository:
+```bash
+npm install
+```
 
-   ```bash
-   git clone https://github.com/arrazyfathan/tudu-backend.git
-   cd tudu-backend
-   ```
+### Configure environment
 
-2. Install dependencies:
+```bash
+cp .env.sample .env
+```
 
-   ```bash
-   npm install
-   ```
+Fill in the required values; see the Environment Variables section below.
 
-3. Set up environment variables:
+### Setup database
 
-   - Copy the `.env.sample` file to `.env`
-   - Fill in the required values:
-     ```
-     DATABASE_URL=postgresql://username:password@localhost:5432/tudu
-     PORT=3000
-     JWT_ACCESS_SECRET=your_secret_key
-     ```
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
 
-4. Set up the database:
+### (Optional) Seed data
 
-   ```bash
-   npx prisma migrate dev
-   ```
+```bash
+npm run seed
+```
 
-5. Generate Prisma client:
+### Run the API
 
-   ```bash
-   npx prisma generate
-   ```
-
-6. Seed the database (optional):
-   ```bash
-   npm run seed
-   ```
-
-## Usage Instructions
-
-### Starting the Server
-
-#### Development Mode
+Development:
 
 ```bash
 npm run dev
 ```
 
-#### Production Mode
+Production:
 
 ```bash
 npm run build
 npm start
 ```
 
-### API Endpoints
+## Environment Variables
 
-#### Authentication
+Create `.env` based on `.env.sample`:
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login
-- `POST /api/auth/refresh_token` - Refresh access token
-- `POST /api/auth/logout` - Logout (requires authentication)
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/tudu
+PORT=3000
+JWT_ACCESS_SECRET=your-secret
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+```
 
-#### User Management
+Notes:
 
-- `GET /api/user` - Get current user profile
-- `PATCH /api/user` - Update user profile
-- `DELETE /api/user` - Delete user account
-- `POST /api/user/fcm-token` - Store FCM token for notifications
+- `JWT_ACCESS_SECRET` is required for auth middleware and token generation.
+- Redis values are optional while Redis is disabled.
 
-#### Categories
+## Database and Prisma
 
-- `GET /api/categories` - Get all categories
-- `POST /api/categories` - Create a new category
-- `PATCH /api/categories/:categoryId` - Update a category
-- `DELETE /api/categories/:categoryId` - Delete a category
+- Prisma schema: `prisma/schema.prisma`
+- Prisma client output: `generated/prisma`
+- Migrations: `prisma/migrations`
 
-#### Tags
+Useful commands:
 
-- `GET /api/tags` - Get all tags
-- `POST /api/tags` - Create a new tag
-- `PATCH /api/tags/:tagId` - Update a tag
-- `DELETE /api/tags/:tagId` - Delete a tag
+```bash
+npx prisma migrate dev
+npx prisma generate
+npx prisma studio
+```
 
-#### Journals
+## Firebase (Push Notifications)
 
-- `GET /api/journals` - Get all journals
-- `POST /api/journals` - Create a new journal
-- `PUT /api/journals/:journalId` - Update a journal
-- `DELETE /api/journals/:journalId` - Delete a journal
-- `DELETE /api/journals` - Delete multiple journals
+The API uses `service-account.json` at the project root.
 
-#### Notifications
+Steps:
 
-- `POST /api/notification/send-notification` - Send a notification
+1. Copy the example file:
+
+   ```bash
+   cp service-account.example.json service-account.json
+   ```
+
+2. Fill in values from your Firebase Admin SDK service account.
+
+This is required for `POST /api/notification/send-notification`.
+
+## API Documentation
+
+Base URL: `http://localhost:3000`
+
+### Auth
+
+- `POST /api/auth/register`
+  - Body: `{ email, username, name, password }`
+  - Response: user object
+
+- `POST /api/auth/login`
+  - Body: `{ username, password }`
+  - Response: user object + `token.access_token` and `token.refresh_token`
+  - Access token expires in 1 hour; refresh token expires in 30 days
+
+- `POST /api/auth/refresh_token`
+  - Body: `{ refresh_token }`
+  - Response: user object + new tokens
+
+- `POST /api/auth/logout`
+  - Auth: Bearer token
+  - Body: `{ refresh_token }`
+
+### User
+
+All routes require `Authorization: Bearer <access_token>`.
+
+- `GET /api/user`
+  - Response: current user
+
+- `PATCH /api/user`
+  - Body (any of): `{ name, email, password }`
+
+- `DELETE /api/user`
+  - Soft deletes the user and revokes tokens
+
+- `POST /api/user/fcm-token`
+  - Body: `{ fcmToken }`
+
+### Categories
+
+All routes require auth.
+
+- `GET /api/categories`
+  - Returns global + user categories
+
+- `POST /api/categories`
+  - Body: `{ name }`
+
+- `PATCH /api/categories/:categoryId`
+  - Body: `{ name }`
+
+- `DELETE /api/categories/:categoryId`
+
+### Tags
+
+All routes require auth.
+
+- `GET /api/tags`
+  - Returns global + user tags
+
+- `POST /api/tags`
+  - Body: `{ name }` (no spaces allowed)
+
+- `PATCH /api/tags/:tagId`
+  - Body: `{ name }` (no spaces allowed)
+
+- `DELETE /api/tags/:tagId`
+
+### Journals
+
+All routes require auth.
+
+- `POST /api/journals`
+  - Body: `{ title, content, date, categoryId?, tagIds }`
+  - `date` should be an ISO date string
+  - `tagIds` should be an array (use `[]` if none)
+
+- `GET /api/journals`
+  - Query: `search`, `page`, `size`
+  - Defaults: `page=1`, `size=10`
+  - `search` matches title or content (case-insensitive)
+
+- `PUT /api/journals/:journalId`
+  - Body: `{ title, content, date, categoryId?, tagIds }`
+
+- `DELETE /api/journals/:journalId`
+  - Soft delete
+
+- `DELETE /api/journals`
+  - Body: `{ ids: ["id1", "id2"] }`
+
+Notes:
+
+- `categoryId` must exist and belong to the user or be global.
+- `tagIds` must exist; missing tags return 404.
+- Update requires full fields (title, content, date).
+
+### Notifications
+
+- `POST /api/notification/send-notification`
+  - Body: `{ title, body, token }`
+  - No auth required
+
+## Response Format and Errors
+
+Successful response:
+
+```json
+{
+  "status": "success",
+  "message": "...",
+  "data": {}
+}
+```
+
+Paginated response:
+
+```json
+{
+  "status": "success",
+  "message": "...",
+  "data": [],
+  "paging": {
+    "current_page": 1,
+    "total_page": 5,
+    "total_items": 50,
+    "size": 10
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "status": "error",
+  "message": "...",
+  "errors": {
+    "field": "message"
+  }
+}
+```
+
+Common status codes:
+
+- 400: validation errors
+- 401: unauthorized
+- 403: missing/invalid auth token
+- 404: not found
+- 409: conflict (duplicate)
+- 500: unexpected server error
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm start
+npm run type-check
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+npm test
+npm run seed
+```
 
 ## Project Structure
 
 ```
-tudu-backend/
-├── dist/                  # Compiled JavaScript files
-├── docs/                  # Documentation
-├── logs/                  # Application logs
-├── prisma/                # Prisma schema and migrations
-├── src/                   # Source code
-│   ├── config/            # Configuration files
-│   ├── controllers/       # Request handlers
-│   ├── middlewares/       # Express middlewares
-│   ├── models/            # Data models
-│   ├── routes/            # API routes
-│   ├── services/          # Business logic
-│   ├── utils/             # Utility functions
-│   ├── app.ts             # Express app setup
-│   └── server.ts          # Server entry point
-├── test/                  # Test files
-├── .env                   # Environment variables
-├── .env.sample            # Sample environment variables
-├── docker-compose.yaml    # Docker Compose configuration
-├── Dockerfile             # Docker configuration
-├── package.json           # Project dependencies
-└── tsconfig.json          # TypeScript configuration
+.
+├── dist/                 # Compiled output
+├── generated/            # Prisma client output
+├── logs/                 # Winston logs (rotating)
+├── prisma/               # Prisma schema + migrations + seed
+├── src/                  # Application source
+│   ├── config/           # Database and Redis config
+│   ├── controllers/      # Route handlers
+│   ├── errors/           # Custom error types
+│   ├── firebase/         # Firebase admin setup
+│   ├── middlewares/      # Auth, error handling
+│   ├── models/           # Request/response models
+│   ├── routes/           # API routes
+│   ├── services/         # Business logic
+│   ├── utils/            # Logger, helpers
+│   ├── validations/      # Zod schemas
+│   ├── app.ts            # Express app
+│   └── server.ts         # Server entry point
+├── README.md
+├── package.json
+└── tsconfig.json
 ```
 
-## Contributing Guidelines
+## Contributing
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature`)
-3. Make your changes
-4. Run tests to ensure everything works (`npm test`)
-5. Commit your changes (`git commit -m 'Add some feature'`)
-6. Push to the branch (`git push origin feature/your-feature`)
-7. Open a Pull Request
-
-### Code Style
-
-This project uses ESLint and Prettier for code formatting. Before submitting a PR, please ensure your code follows the style guidelines by running:
-
-```bash
-npm run lint
-npm run format
-```
+1. Fork and create a feature branch.
+2. Run tests and lint checks before opening a PR.
+3. Keep changes focused and documented.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact/Author Info
-
-- **Author**: Ar Razy Fathan Rabbani
-- **GitHub**: [Your GitHub Profile](https://github.com/arrazyfathan)
-- **Email**: [Your Email](mailto:razywrk@gmail.com)
-
-## Acknowledgements
-
-- Express.js team for the excellent web framework
-- Prisma team for the powerful ORM
-- All contributors who have helped improve this project
+MIT
