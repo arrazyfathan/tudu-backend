@@ -155,15 +155,18 @@ Base URL: `http://localhost:3000`
 ### Auth
 
 - `POST /api/auth/register`
+
   - Body: `{ email, username, name, password }`
   - Response: user object
 
 - `POST /api/auth/login`
+
   - Body: `{ username, password }`
   - Response: user object + `token.access_token` and `token.refresh_token`
   - Access token expires in 1 hour; refresh token expires in 30 days
 
 - `POST /api/auth/refresh_token`
+
   - Body: `{ refresh_token }`
   - Response: user object + new tokens
 
@@ -176,12 +179,15 @@ Base URL: `http://localhost:3000`
 All routes require `Authorization: Bearer <access_token>`.
 
 - `GET /api/user`
+
   - Response: current user
 
 - `PATCH /api/user`
+
   - Body (any of): `{ name, email, password }`
 
 - `DELETE /api/user`
+
   - Soft deletes the user and revokes tokens
 
 - `POST /api/user/fcm-token`
@@ -192,12 +198,15 @@ All routes require `Authorization: Bearer <access_token>`.
 All routes require auth.
 
 - `GET /api/categories`
+
   - Returns global + user categories
 
 - `POST /api/categories`
+
   - Body: `{ name }`
 
 - `PATCH /api/categories/:categoryId`
+
   - Body: `{ name }`
 
 - `DELETE /api/categories/:categoryId`
@@ -207,12 +216,15 @@ All routes require auth.
 All routes require auth.
 
 - `GET /api/tags`
+
   - Returns global + user tags
 
 - `POST /api/tags`
+
   - Body: `{ name }` (no spaces allowed)
 
 - `PATCH /api/tags/:tagId`
+
   - Body: `{ name }` (no spaces allowed)
 
 - `DELETE /api/tags/:tagId`
@@ -222,19 +234,23 @@ All routes require auth.
 All routes require auth.
 
 - `POST /api/journals`
+
   - Body: `{ title, content, date, categoryId?, tagIds }`
   - `date` should be an ISO date string
   - `tagIds` should be an array (use `[]` if none)
 
 - `GET /api/journals`
+
   - Query: `search`, `page`, `size`
   - Defaults: `page=1`, `size=10`
   - `search` matches title or content (case-insensitive)
 
 - `PUT /api/journals/:journalId`
+
   - Body: `{ title, content, date, categoryId?, tagIds }`
 
 - `DELETE /api/journals/:journalId`
+
   - Soft delete
 
 - `DELETE /api/journals`
